@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "rootDirs": ["src"],
+    "outDir": "dist",
+    "lib": ["es2020"],
+    "target": "es2020",
+    "module": "esnext",
+    "strict": true,
+    "allowImportingTsExtensions": true,
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "types": ["node"],
+    "noEmit": true ,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
+  },
+   "ts-node": {
+        "esm": true
+    }
+}

@@ -1,0 +1,14 @@
+
+:root {
+    --swiper-navigation-size: 20px;
+}
+
+.swiper-button-next,
+.swiper-button-prev {
+    background-color: #E8F0FE;
+    padding: 13px 18px;
+    border-radius: 100%;
+    margin-top: -40px;
+    z-index: 10;
+    color: black;
+}
