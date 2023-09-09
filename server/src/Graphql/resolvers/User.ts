@@ -1,11 +1,14 @@
 import * as z from "zod";
 import pkg from "lodash";
-import { ReturnModelType } from "@typegoose/typegoose";
 import { GraphQLError } from "graphql";
+import { dirname } from "path";
+import { fileURLToPath } from "url";
+import GraphQLUpload from "graphql-upload/GraphQLUpload.mjs";
 // externally crafted imports of ressources
 import { IUserContext, IUser } from "../../typings/Con_Register.ts";
 import GenerateToken from "../../Utils/GenerateToken.ts";
 import RegisterSchema from "../../Validators/Registeration.ts";
+import UploadFile from "../../Service/ImageUpload.ts";
 import {
   LoginSchemaWithEmail,
   LoginSchemaWithUsername,
@@ -15,19 +18,21 @@ import { REDIS_CLIENT } from "../../Constants/Redis.ts";
 import { ACCESS_TOKEN, REFRESH_TOKEN } from "../../Config/index.ts";
 import { Resolvers } from "../../__generate__/types.ts";
 import { serializeUser } from "../../Service/User.ts";
+import { ImageType } from "../../typings/upload.ts";
+import { userModel } from "../../Models/index.ts";
 
 const { isNil, isUndefined, nth, isError } = pkg;
 
+const __filename: string = fileURLToPath(import.meta.url);
+const __dirname: string = dirname(__filename);
+
 const UserResolver: Resolvers = {
+  // This maps the Upload scalar to the implementation provided
+  // by the graphql-upload package.
+  Upload: GraphQLUpload,
   Query: {
-    userData: async (
-      __,
-      args,
-      { user, isAuth, userModel }: IUserContext,
-      info
-    ) => {
+    userData: async (__, { _id }) => {
       try {
-        const { _id } = user;
         const data = await userModel.findOne({ _id });
 
         const Get_User_Data = serializeUser({
@@ -52,10 +57,11 @@ const UserResolver: Resolvers = {
         });
       }
     },
-    hello: (__, args, context) => {
+    hello: (__, args, contextValue) => {
+      console.log(contextValue);
       return "let us go ";
     },
-    Connection: async (_: any, args, { userModel }: IUserContext) => {
+    Connection: async (_: any, args) => {
       try {
         const { Username, Password, Email } = await args.connectionInfo;
 
@@ -170,7 +176,7 @@ const UserResolver: Resolvers = {
     },
   },
   Mutation: {
-    Registeration: async (_: any, args, { userModel }: IUserContext) => {
+    Registeration: async (_: any, args) => {
       try {
         const result: IUser<string> = await RegisterSchema.parse(
           args.registerInfo
@@ -212,7 +218,7 @@ const UserResolver: Resolvers = {
             });
 
             // generating the token from the user information
-            const token = GenerateToken(
+            const token = await GenerateToken(
               {
                 Data: userCreation.toObject(),
                 issuer: Firstname,
@@ -220,7 +226,7 @@ const UserResolver: Resolvers = {
               `${ACCESS_TOKEN}`
             );
 
-            const refreshToken: Promise<string> = GenerateToken(
+            const refreshToken = await GenerateToken(
               {
                 Data: userCreation.toObject(),
                 issuer: Firstname,
@@ -251,6 +257,49 @@ const UserResolver: Resolvers = {
             code: "SERVER_ERROR",
           },
         });
+      }
+    },
+    ChangeProfile: async (__, { file, _id }) => {
+      try {
+        const { secureUrl, success, serverUrl, public_id }: ImageType<string> =
+          await UploadFile(file, true, __dirname, "Thirdy_social");
+        // update user model with cloudinary secure image and public_id
+        await userModel
+          .findOneAndUpdate({
+            Image: secureUrl,
+            PublicId: public_id,
+          })
+          .where({ _id });
+
+        return {
+          message: "profile successfully change",
+          success,
+        };
+      } catch (error) {
+        throw new Error(`${error}`);
+      }
+    },
+    ChangeCover: async (__, { file, _id }) => {
+      try {
+        const { secureUrl, success, serverUrl, public_id }: ImageType<string> =
+          await UploadFile(file, true, __dirname, "Thirdy_social");
+
+        // update user model with cloudinary secure image and public_id
+        await userModel
+          .findOneAndUpdate({
+            CoverImage: {
+              Image: secureUrl,
+              PublicId: public_id,
+            },
+          })
+          .where({ _id: _id });
+
+        return {
+          message: "cover image successfully uploaded",
+          success: true,
+        };
+      } catch (error) {
+        throw new Error(`${error}`);
       }
     },
   },

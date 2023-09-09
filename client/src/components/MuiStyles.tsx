@@ -67,4 +67,24 @@ const CssTextField = styled(TextField)({
   },
 });
 
-export { CssTextField, StyledBadge, StyledBadgeComment };
+const RetweetTextField = styled(TextField)({
+  "& .MuiInput-underline:after": {
+    borderBottomColor: "#B2BAC2",
+  },
+  "& .MuiOutlinedInput-root": {
+    backgroundColor: "#E8F0FE",
+    borderRadius: 20,
+    "& fieldset": {
+      borderColor: "#E8F0FE",
+    },
+    "&:hover fieldset": {
+      borderColor: "#E8F0FE",
+    },
+    "&.Mui-focused fieldset": {
+      borderColor: "#E8F0FE",
+      border: "none",
+    },
+  },
+});
+
+export { CssTextField, StyledBadge, StyledBadgeComment, RetweetTextField };

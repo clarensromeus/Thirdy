@@ -16,6 +16,7 @@ import Icon from "@mui/material/Icon";
 import { Outlet } from "react-router-dom";
 import { useQuery } from "@apollo/client";
 import { useSetRecoilState } from "recoil";
+import { useJwt } from "react-jwt";
 // internally crafted imports of ressources
 import AppDrawer from "../components/Drawer";
 import {
@@ -28,17 +29,41 @@ import ProfileMenu from "../components/Menu";
 import { Get_UserData } from "../graphql/User.graphql";
 import Context from "../store/ContextApi";
 import { IAuthState } from "../typings/GlobalState";
-import { UserDataQuery } from "../__generated__/graphql";
+import {
+  UserDataQuery,
+  UserDataQueryVariables,
+} from "../__generated__/graphql";
 import { serializeUserData } from "../utils";
+import { INotiPopperProps } from "../typings/Notifications";
+import NotiPopper from "../components/NotificationPopper";
 
 const Home = (): JSX.Element => {
+  
+  const [open, setOpen] = React.useState<boolean>(false);
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-  const open = Boolean(anchorEl);
+  // notifications popper state
+  const [openNoti, setOpenNoti] = React.useState(false);
+  const [anchorElNoti, setAnchorElNoti] = React.useState<null | HTMLElement>(
+    null
+  );
+
+  // event handler notifications popper
+  const handleClickNoti = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorElNoti(event.currentTarget);
+    setOpenNoti((previousOpen) => !previousOpen);
+  };
+
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
+    setOpen((previousOpen) => !previousOpen);
   };
 
   const ContextData = React.useContext(Context);
+
+  // decode the token stored in the browser
+  const { decodedToken }: any = useJwt(
+    `${localStorage.getItem("TOKEN")} ` ?? ""
+  );
 
   const setState = useSetRecoilState<Partial<IAuthState>>(
     ContextData.AuthState
@@ -50,7 +75,16 @@ const Home = (): JSX.Element => {
     open,
   };
 
-  const { data } = useQuery<Omit<UserDataQuery, "__typename">>(Get_UserData, {
+  const NotificationsData: INotiPopperProps = {
+    openNoti,
+    setAnchorElNoti,
+    anchorElNoti,
+  };
+
+  const { data } = useQuery<
+    Omit<UserDataQuery, "__typename">,
+    UserDataQueryVariables
+  >(Get_UserData, {
     onCompleted: (data: Omit<UserDataQuery, "__typename">) => {
       const userData = serializeUserData({
         _id: `${data.userData?._id}`,
@@ -66,10 +100,14 @@ const Home = (): JSX.Element => {
 
       setState({ Data: userData });
     },
+    variables: {
+      _id: `${decodedToken?._id}`,
+    },
   });
 
   return (
     <Box sx={{ display: "flex" }}>
+      <NotiPopper {...NotificationsData} />
       <AppBar
         position="fixed"
         sx={{
@@ -136,6 +174,7 @@ const Home = (): JSX.Element => {
               aria-label="show 17 new notifications"
               disableRipple
               disableFocusRipple
+              onClick={handleClickNoti}
             >
               <Box
                 sx={{

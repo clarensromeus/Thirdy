@@ -10,6 +10,8 @@ import ProtectedRoute from "./routes/ProtectedRoute";
 import Context from "./store/ContextApi";
 import { InitialData } from "./store/ContextData";
 import Profile from "./routes/Profile";
+import NotFound from "./routes/NotFound";
+import GroupRating from "./routes/GroupRating";
 
 const Connection = React.lazy(() => import("./routes/Connection"));
 const Home = React.lazy(() => import("./routes/Home"));
@@ -25,12 +27,15 @@ const Pickrouters = (): JSX.Element => {
             <Route path="chat" element={<Chat />} />
             <Route path="friends" element={<Friends />} />
             <Route path="notifications" element={<Notifications />} />
-            <Route path="groups" element={<Groups />} />
+            <Route path="groups">
+              <Route index element={<Groups />} />
+              <Route path=":groupname" element={<GroupRating />} />
+            </Route>
             <Route path="profile/:id" element={<Profile />} />
           </Route>
         </Route>
         <Route path="/register" element={<Register />} />
-        <Route path="test" element={<div>romeus clarens</div>} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Context.Provider>
   );

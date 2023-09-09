@@ -1,26 +1,60 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
+// external imports of ressources
 import { RecoilRoot } from "recoil";
+import { split } from "@apollo/client";
+import { getMainDefinition } from "@apollo/client/utilities";
 import {
   ApolloProvider,
   InMemoryCache,
   ApolloClient,
-  HttpLink,
   NormalizedCacheObject,
   from,
   ApolloLink,
 } from "@apollo/client";
 import { RetryLink } from "@apollo/client/link/retry";
 import { setContext } from "@apollo/client/link/context";
+import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
+import { createClient } from "graphql-ws";
 // internally crafted imports of ressources
+import createUploadLink from "apollo-upload-client/public/createUploadLink.js";
 import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 
-const httpLink: HttpLink = new HttpLink({
+const uploadLink: ApolloLink = createUploadLink({
   uri: "http://localhost:5000/graphql",
+  headers: {
+    "Apollo-Require-Preflight": "true",
+  },
 });
+
+const token: string | null = localStorage.getItem("TOKEN");
+
+// webSocket link
+const wsLink: GraphQLWsLink = new GraphQLWsLink(
+  createClient({
+    url: "ws://localhost:5000/graphql",
+    connectionParams: {
+      authentication: token ? `Bearer ${token}` : "",
+    },
+    lazy: true,
+  })
+);
+
+// split communication by operation type
+const splitLink = split(
+  ({ query }) => {
+    const definition = getMainDefinition(query);
+    return (
+      definition.kind === "OperationDefinition" &&
+      definition.operation === "subscription"
+    );
+  },
+  wsLink,
+  uploadLink
+);
 
 // link defines to set configuration to retry on network failure
 const retryLink: RetryLink = new RetryLink({
@@ -49,7 +83,7 @@ const authLink: ApolloLink = setContext((_, { headers }) => {
 
 // initialize ApolloClient and add configuration within its constructor
 const client: ApolloClient<NormalizedCacheObject> = new ApolloClient({
-  link: from([authLink, httpLink, retryLink]),
+  link: from([authLink, splitLink, retryLink]),
   cache: new InMemoryCache(),
   connectToDevTools: true,
 });

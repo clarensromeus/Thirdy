@@ -1,41 +1,25 @@
 import lodash from "lodash";
-import { ReadStream, WriteStream, createWriteStream } from "fs";
-import { join, parse, dirname } from "path";
+import { dirname } from "path";
 import { fileURLToPath } from "url";
+import GraphQLUpload from "graphql-upload/GraphQLUpload.mjs";
 // externally crafted imports of ressources
 import { Resolvers } from "../../__generate__/types";
-import { URL } from "../../Config/index.ts";
-import __dirname from "../../Service/GlobalVars.ts";
+import UploadFile from "../../Service/ImageUpload.ts";
+import { ImageType } from "../../typings/upload.ts";
 
-const {} = lodash;
+const __filename: string = fileURLToPath(import.meta.url);
+const __dirname: string = dirname(__filename);
 
-export const Image = {
+export const Image: Resolvers = {
+  // This maps the Upload scalar to the implementation provided
+  // by the graphql-upload package.
+  Upload: GraphQLUpload,
   Mutation: {
-    singleUpload: async (__: any, { file }: any) => {
-      console.log(file);
-      /* console.log(file);
-      let { filename, createReadStream } = await file;
-      // extract out the name and extension of the filename
-      let { name, ext } = parse(filename);
+    singleUpload: async (__, { file, name, Email }) => {
+      const { success, secureUrl, serverUrl, public_id }: ImageType<string> =
+        await UploadFile(file, true, __dirname, "Thirdy_social");
 
-      const stream = await createReadStream();
-      // retrieve the file name and replace all numbers, letters and white space with a simple dash
-      name = name.replace(/^[A-Z0-9]+[/d]/, "-");
-
-      // create the server file
-      let serverFile = join(
-        __dirname,
-        `../../Uploads/${name}-${new Date()}-${ext}`
-      );
-
-      // write the file
-      const writeFileStream = await createWriteStream(serverFile);
-      // use pipe to read the file in chain
-      stream.pipe(writeFileStream);
-
-      serverFile = `${URL}/${serverFile.split("Uploads")[1]}`; */
-
-      return "file is uploading with success";
+      return { success, serverUrl };
     },
   },
 };

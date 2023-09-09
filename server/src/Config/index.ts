@@ -16,4 +16,7 @@ export const {
   REFRESH_TOKEN,
   Base_URL,
   URL = `${Base_URL}${PORT}`,
+  Cloud_Name,
+  Api_Secret,
+  Api_Key,
 }: any = parsed;

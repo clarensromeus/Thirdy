@@ -31,4 +31,9 @@ type IUserContext = {
   userModel: ReturnModelType<typeof User>;
 };
 
-export { IRegisteration, IConnection, IUserContext, IUser };
+interface IuserPopulation {
+  path: string;
+  select: string;
+}
+
+export { IRegisteration, IConnection, IUserContext, IUser, IuserPopulation };

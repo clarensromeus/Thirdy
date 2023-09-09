@@ -21,8 +21,8 @@ const USER_REGISTERATION = gql`
 `;
 
 const Get_UserData = gql`
-  query userData {
-    userData {
+  query userData($_id: ID!) {
+    userData(_id: $_id) {
       _id
       Firstname
       Lastname
@@ -36,4 +36,13 @@ const Get_UserData = gql`
   }
 `;
 
-export { USER_CONNECTION, USER_REGISTERATION, Get_UserData };
+const Change_Profile = gql`
+  mutation Change_User_Profile($file: Upload!, $id: String!) {
+    ChangeProfile(file: $file, _id: $id) {
+      message
+      success
+    }
+  }
+`;
+
+export { USER_CONNECTION, USER_REGISTERATION, Get_UserData, Change_Profile };

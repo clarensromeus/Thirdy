@@ -1,6 +1,7 @@
 import { styled } from "@mui/material/styles";
 import InputBase from "@mui/material/InputBase";
 import grey from "@mui/material/colors/grey";
+import { TextField } from "@mui/material";
 
 const CssTextField = styled(InputBase)(({ theme }) => ({
   color: `${grey[900]}`,
@@ -32,4 +33,16 @@ const TextFieldWrapper = styled("div")(({ theme }) => ({
   },
 }));
 
-export { TextFieldWrapper, CssTextField };
+const CssTextFieldShare = styled(TextField)({
+  "& .MuiOutlinedInput-root": {
+    backgroundColor: "#E8F0FE",
+    borderRadius: 50,
+    border: "none",
+    "&.Mui-focused fieldset": {
+      border: "none",
+      borderRadius: 50,
+    },
+  },
+});
+
+export { TextFieldWrapper, CssTextField, CssTextFieldShare };

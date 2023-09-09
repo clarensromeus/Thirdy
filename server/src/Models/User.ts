@@ -1,31 +1,60 @@
-import { prop, getModelForClass, modelOptions } from "@typegoose/typegoose";
+import {
+  prop,
+  getModelForClass,
+  modelOptions,
+  Ref,
+} from "@typegoose/typegoose";
+// internally crafted imports of ressources
+import { Post } from "./Post.ts";
+import { Chat } from "./Chat.ts";
+import { Friend } from "./Friends.ts";
+import { Group } from "./Groups.ts";
+import { CoverPicture } from "./CoverPicture.ts";
 
 // parse the collection name and timestamp to generate createdAt and updateAt field in the db
-modelOptions({ schemaOptions: { collection: "users", timestamps: true } });
+@modelOptions({ schemaOptions: { collection: "users", timestamps: true } })
 class User {
-  @prop({ required: true, lowercase: true, trim: true })
-  Firstname!: string;
+  @prop({ type: () => String, required: true, lowercase: true, trim: true })
+  public Firstname!: string;
 
-  @prop({ required: true, lowercase: true, trim: true })
-  Lastname!: string;
+  @prop({ type: () => String, required: true, lowercase: true, trim: true })
+  public Lastname!: string;
 
-  @prop({ required: false })
-  Email?: string;
+  @prop({ type: () => String, required: false })
+  public Email?: string;
 
-  @prop({ required: true, maxlength: 60, minlength: 8 })
-  Password!: string;
+  @prop({ type: () => String, required: true, maxlength: 60, minlength: 8 })
+  public Password!: string;
 
-  @prop({ required: true, lowercase: true })
-  Sex!: String;
+  @prop({ type: () => String, required: true, lowercase: true })
+  public Sex!: string;
 
-  @prop({ required: false, trim: true })
-  Image?: string;
+  @prop({ type: () => String, required: false, trim: true })
+  public Image?: string;
 
-  @prop({ required: false })
-  Bio?: string;
+  @prop({ type: () => String, required: false })
+  public PublicId?: string;
 
-  @prop({ required: true, lowercase: true })
-  DOB!: string;
+  @prop({ type: () => CoverPicture, required: false })
+  public CoverImage?: CoverPicture;
+
+  @prop({ type: () => String, required: false })
+  public Bio?: string;
+
+  @prop({ type: () => String, required: true, lowercase: true })
+  public DOB!: string;
+
+  @prop({ ref: () => Friend, required: false })
+  public Friends?: Ref<Friend>[];
+
+  @prop({ ref: () => Chat, required: true, default: [] })
+  public Chats!: Ref<Chat>[];
+
+  @prop({ ref: () => Group, required: true, default: [] })
+  public Groups!: Ref<Group>[];
+
+  @prop({ ref: () => Post, required: false })
+  public Posts?: Ref<Post>[];
 }
 
 const userModel = getModelForClass(User);

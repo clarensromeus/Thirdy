@@ -5,12 +5,13 @@ interface ITokenInfo<S> {
   Data: object;
 }
 
+import { PubSub } from "graphql-subscriptions";
+
 interface IGetInfo<S> {
   _id: S;
   Firstname: S;
   Lastname: S;
   Email?: S;
-  Username?: S;
   Password: S;
   Sex: S;
   DOB: S;
@@ -30,4 +31,9 @@ type Iauth = {
   isAuth?: boolean;
 };
 
-export { ITokenInfo, RequestWithUserRole, Iauth, IGetInfo };
+type IContext = {
+  user: IGetInfo<string>;
+  pubSub: PubSub;
+};
+
+export { ITokenInfo, RequestWithUserRole, Iauth, IGetInfo, IContext };

@@ -9,20 +9,50 @@ import AddIcon from "@mui/icons-material/Add";
 import IconButton from "@mui/material/IconButton";
 import AvatarGroup from "@mui/material/AvatarGroup";
 import { useRecoilValue } from "recoil";
+import SearchIcon from "@mui/icons-material/Search";
+import List from "@mui/material/List";
+import ListItem from "@mui/material/ListItem";
+import ListItemText from "@mui/material/ListItemText";
+import ListItemAvatar from "@mui/material/ListItemAvatar";
+import ListItemButton from "@mui/material/ListItemButton";
 // internally crafted imports of ressources
 import { CssTextField, TextFieldWrapper } from "../MuiStyles/textField";
 import StatusSwiper from "./StatusSwiper";
 import CardPost from "../components/Card";
 import Context from "../store/ContextApi";
 import { IAuthState } from "../typings/GlobalState";
+import { IPostFrame } from "../typings/Post";
+import PostFrame from "../components/PostFrame";
+import { ContactList, UserContacts } from "../components/Contact";
+import { IContact } from "../typings/Home";
 
 const Dashboard = (): JSX.Element => {
   const ContextData = React.useContext(Context);
   // grab connected user info from the global state
   const AuthInfo = useRecoilValue<Partial<IAuthState>>(ContextData.GetAuthInfo);
 
+  const [openFrame, setOpenFrame] = React.useState<boolean>(false);
+  const [seeAll, setSeeAll] = React.useState<number>(3);
+
+  const PostData: IPostFrame = {
+    openFrame,
+    setOpenFrame,
+    UserInfo: {
+      Firstname: `${AuthInfo.Data?.Firstname}`,
+      Lastname: `${AuthInfo.Data?.Lastname}`,
+      Email: `${AuthInfo.Data?.Email}`,
+      Image: `${AuthInfo.Data?.Image}`,
+    },
+  };
+
+  const cardWidth: { width: number } = {
+    width: 500,
+  };
+
+  const Contacts: IContact<string>[] = UserContacts(ContactList, seeAll);
   return (
     <>
+      <PostFrame {...PostData} />
       <Box sx={{ display: "flex", gap: 5, py: 3 }}>
         <Box
           sx={{
@@ -73,7 +103,11 @@ const Dashboard = (): JSX.Element => {
               </Box>
               <Box sx={{ width: "inherit" }}>
                 <TextFieldWrapper>
-                  <CssTextField fullWidth placeholder="What's on your mind?" />
+                  <CssTextField
+                    fullWidth
+                    placeholder="What's on your mind?"
+                    onFocus={() => setOpenFrame(true)}
+                  />
                 </TextFieldWrapper>
               </Box>
               <Box pt={1}>
@@ -82,14 +116,14 @@ const Dashboard = (): JSX.Element => {
             </Box>
           </Paper>
           <Box>
-            <CardPost />
+            <CardPost {...cardWidth} />
           </Box>
         </Box>
         <Box>
           <Box className="suggestion" sx={{ position: "sticky", top: "80px" }}>
             <Box>
               <Typography fontWeight="bold" color="text.secondary">
-                Friends Request
+                Friend requests
               </Typography>
             </Box>
             <Box sx={{ display: "flex", gap: 2, py: 2 }}>
@@ -158,6 +192,63 @@ const Dashboard = (): JSX.Element => {
               <Box>
                 <Typography fontWeight="bold">Create new group</Typography>
               </Box>
+            </Box>
+            <Box
+              pt="6px"
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <Box>
+                <Typography fontWeight="bold" color="text.secondary">
+                  Contacts
+                </Typography>
+              </Box>
+              <Box>
+                <IconButton
+                  sx={{ mt: 1, px: 0 }}
+                  disableRipple
+                  disableFocusRipple
+                  disableTouchRipple
+                  onClick={() => setSeeAll(ContactList.length + 1)}
+                >
+                  <SearchIcon />
+                </IconButton>
+              </Box>
+            </Box>
+            <Box>
+              <List
+                sx={{
+                  width: "100%",
+                  m: 0,
+                  p: 0,
+                  maxWidth: 300,
+                  bgcolor: "rgba(232,240,254, 0.1)",
+                }}
+              >
+                {Contacts.map((value, index) => {
+                  const { Firstname, Lastname, Image, Date } = value;
+                  return (
+                    <ListItem key={index} sx={{ px: 0, py: 0, m: 0 }}>
+                      <ListItemButton sx={{ px: 0, py: 0, m: 0 }}>
+                        <ListItemAvatar>
+                          <Avatar alt="Friends" src={Image} />
+                        </ListItemAvatar>
+                        <ListItemText
+                          primary={
+                            <Typography fontWeight="bold">
+                              {Firstname} {Lastname}
+                            </Typography>
+                          }
+                          secondary={Date}
+                        />
+                      </ListItemButton>
+                    </ListItem>
+                  );
+                })}
+              </List>
             </Box>
           </Box>
         </Box>

@@ -4,4 +4,16 @@ interface IDrawer<T> {
   Path: T;
 }
 
-export type { IDrawer };
+interface IContact<S> {
+  Firstname: S;
+  Lastname: S;
+  Image: S;
+  Date: S;
+}
+
+interface IMenuProfile {
+  RouteName: string;
+  Icon: React.ReactElement;
+}
+
+export type { IDrawer, IContact, IMenuProfile };

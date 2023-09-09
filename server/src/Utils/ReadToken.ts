@@ -1,25 +1,19 @@
-import { GraphQLError } from "graphql";
-import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import { promisify } from "util";
 // internally crafted imports of ressources
-import { RequestWithUserRole } from "../typings/Auth.ts";
 import { userModel } from "../Models/User.ts";
+import { Iauth } from "../typings/Auth.ts";
 import { ACCESS_TOKEN } from "../Config/index.ts";
 
-const ReadToken = async (
-  req: RequestWithUserRole,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
+const ReadToken = async (tokenHeader: string): Promise<Iauth> => {
   try {
     let decodeToken: any = "";
 
-    const AuthHeader: string | undefined = await req.headers["authorization"];
+    const AuthHeader: string | undefined = await tokenHeader;
     // return nothing if no header is specified
     if (!AuthHeader) {
-      req.isAuth = false;
-      return next();
+      return {
+        isAuth: false,
+      };
     }
     /**
      * Todo ! what to note about the token
@@ -30,41 +24,35 @@ const ReadToken = async (
 
     // return nothing if no token is specified and fire up an error using graphql Error
     if (!token) {
-      req.isAuth = false;
-      new GraphQLError("no token is provided", {
-        extensions: {
-          code: "UNAUTHENTICATED",
-          statusCode: 500,
-          statusMessage: "provide a token first before the operation completes",
-        },
-      });
-      return next();
+      return {
+        isAuth: false,
+      };
     }
 
     // decode the token if exists
     decodeToken = await jwt.verify(token, `${ACCESS_TOKEN}`);
 
     if (!decodeToken) {
-      req.isAuth = false;
-      return next();
+      return {
+        isAuth: false,
+      };
     }
 
     // seek out user from the database
     const userAuth = userModel.findById({ _id: decodeToken._id });
 
     if (!userAuth) {
-      req.isAuth = false;
-      return next();
+      return {
+        isAuth: false,
+      };
     }
 
-    req.isAuth = true;
-    // add the token data decoded to the user created on request to anywhere through app
-    req.user = decodeToken;
-    return next();
+    return {
+      isAuth: true,
+      user: decodeToken,
+    };
   } catch (error) {
-    // throw new Error(`${error}`);
-    console.log(error);
-    next();
+    throw new Error(`${error}`);
   }
 };
 

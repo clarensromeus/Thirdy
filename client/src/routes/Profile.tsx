@@ -2,11 +2,11 @@ import * as React from "react";
 import { Box, Avatar, Button, Typography, Divider } from "@mui/material";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import blue from "@mui/material/colors/blue";
-import EditIcon from "@mui/icons-material/Edit";
 import { useRecoilValue } from "recoil";
 import DateRangeIcon from "@mui/icons-material/DateRange";
 import upperFirst from "lodash/upperFirst";
 import IconButton from "@mui/material/IconButton";
+import EditIcon from "@mui/icons-material/Edit";
 // externally crafted imports of ressources
 import CardPost from "../components/Card";
 import Context from "../store/ContextApi";
@@ -20,11 +20,17 @@ const Profile = () => {
   const AuthInfo = useRecoilValue<Partial<IAuthState>>(contextData.GetAuthInfo);
 
   const [openFrame, setOpenFrame] = React.useState<boolean>(false);
+  // state that detects whether user wants to change image cover or profile
+  const [isCover, setCover] = React.useState<boolean>(false);
 
   const Frame: IFrame = {
     openFrame,
     setOpenFrame,
     Image: `${AuthInfo.Data?.Image}`,
+  };
+
+  const cardWidth: { width: number } = {
+    width: 500,
   };
 
   return (
@@ -47,19 +53,22 @@ const Profile = () => {
             src="https://teachyourkidscode.com/wp-content/uploads/2022/02/best-coding-language-for-games.jpg"
           />
           <Box sx={{ p: 2, position: "absolute", zIndex: 2, top: 0, left: 0 }}>
-            <Button
-              variant="contained"
-              sx={{ borderRadius: 20 }}
-              startIcon={<EditIcon />}
-              component="label"
-            >
-              <Typography
-                fontWeight="bold"
-                sx={{ color: "white", textTransform: "lowercase" }}
+            <input hidden type="file" accept="/*" id="edit_cover" />
+            <label htmlFor="edit_cover">
+              <Button
+                variant="contained"
+                sx={{ borderRadius: 20 }}
+                startIcon={<EditIcon />}
+                component="span"
               >
-                Edit cover
-              </Typography>
-            </Button>
+                <Typography
+                  fontWeight="bold"
+                  sx={{ color: "white", textTransform: "lowercase" }}
+                >
+                  Edit cover
+                </Typography>
+              </Button>
+            </label>
           </Box>
           <Box
             sx={{
@@ -153,15 +162,19 @@ const Profile = () => {
                 </Typography>
               </Box>
             </Box>
-            <Box sx={{ display: "flex", gap: 1, pt: 1 }}>
+            <Box sx={{ display: "flex", gap: 1, pt: 1, alignItems: "center" }}>
               <Box>
                 <Typography fontWeight="bold">Bio</Typography>
               </Box>
               <Box>
-                {" "}
                 <Typography color="text.secondary">
                   i am a software engineer
                 </Typography>
+              </Box>
+              <Box pl={5}>
+                <IconButton>
+                  <EditIcon sx={{ color: blue[600] }} />
+                </IconButton>
               </Box>
             </Box>
             <Divider />
@@ -186,7 +199,7 @@ const Profile = () => {
           <Divider />
         </Box>
         <Box pl={36} pt={1}>
-          <CardPost />
+          <CardPost {...cardWidth} />
         </Box>
       </Box>
     </>

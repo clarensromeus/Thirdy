@@ -61,7 +61,6 @@ const AppDrawer = () => {
     {
       Text: "Chat",
       DrawerIcon: "",
-
       Path: "chat",
     },
     {
@@ -82,10 +81,12 @@ const AppDrawer = () => {
     };
   }, []);
 
+  const ischatRoom: boolean = location.pathname.split("/").includes("chat");
+
   return (
     <>
       <Drawer
-        variant="permanent"
+        variant={ischatRoom ? "temporary" : "permanent"}
         color="rgba(232,240,254, 0.2)"
         sx={{
           width: drawerWidth,
@@ -106,7 +107,6 @@ const AppDrawer = () => {
           }}
         >
           <Box pl={6}>
-            {" "}
             <StyledBadge
               overlap="circular"
               anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
@@ -114,7 +114,7 @@ const AppDrawer = () => {
             >
               <Avatar
                 onClick={() => {
-                  navigate("profile/1234");
+                  navigate(`profile/${AuthInfo.Data?._id}`);
                 }}
                 alt="Profile"
                 src={`${AuthInfo.Data?.Image}`}
@@ -202,9 +202,12 @@ const AppDrawer = () => {
                     <ListItemText
                       sx={{
                         color: "black",
-                        fontWeight: "bold",
                       }}
-                      primary={info.Text}
+                      primary={
+                        <Typography fontWeight="570" fontSize="16px">
+                          {info.Text}
+                        </Typography>
+                      }
                     />
                   </ListItemButton>
                 </ListItem>
