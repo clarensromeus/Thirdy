@@ -45,4 +45,39 @@ const Change_Profile = gql`
   }
 `;
 
-export { USER_CONNECTION, USER_REGISTERATION, Get_UserData, Change_Profile };
+const ALL_USERS = gql`
+  query AllUser {
+    allUsers {
+      _id
+      Email
+      Firstname
+      Lastname
+      Image
+      Friends {
+        _id
+        RequestId
+        AcceptedId
+        User {
+          _id
+          Firstname
+          Lastname
+          Image
+        }
+        Receiver {
+          _id
+          Firstname
+          Lastname
+          Image
+        }
+      }
+    }
+  }
+`;
+
+export {
+  USER_CONNECTION,
+  USER_REGISTERATION,
+  Get_UserData,
+  Change_Profile,
+  ALL_USERS,
+};

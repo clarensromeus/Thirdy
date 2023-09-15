@@ -21,8 +21,8 @@ export class Group {
   @prop({ type: () => String, required: true })
   public Privacy!: string;
 
-  @prop({ ref: () => User, required: true, default: [] })
-  public GroupUsers!: Ref<User>[];
+  @prop({ ref: () => User, required: false })
+  public GroupUsers?: Ref<User>[];
 
   @prop({ ref: () => Post })
   public Posts?: Ref<Post>[];

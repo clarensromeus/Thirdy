@@ -12,7 +12,8 @@ import { InitialData } from "./store/ContextData";
 import Profile from "./routes/Profile";
 import NotFound from "./routes/NotFound";
 import GroupRating from "./routes/GroupRating";
-
+import FriendsToChat from "./components/FriendsToChat";
+import ChatSpace from "./routes/ChatSpace";
 const Connection = React.lazy(() => import("./routes/Connection"));
 const Home = React.lazy(() => import("./routes/Home"));
 
@@ -24,7 +25,10 @@ const Pickrouters = (): JSX.Element => {
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<Home />}>
             <Route index element={<Dashboard />} />
-            <Route path="chat" element={<Chat />} />
+            <Route path="chat" element={<Chat />}>
+              <Route index element={<FriendsToChat />} />
+              <Route path=":id" element={<ChatSpace />} />
+            </Route>
             <Route path="friends" element={<Friends />} />
             <Route path="notifications" element={<Notifications />} />
             <Route path="groups">
@@ -33,6 +37,7 @@ const Pickrouters = (): JSX.Element => {
             </Route>
             <Route path="profile/:id" element={<Profile />} />
           </Route>
+          <Route path="test" element={<ChatSpace />} />
         </Route>
         <Route path="/register" element={<Register />} />
         <Route path="*" element={<NotFound />} />

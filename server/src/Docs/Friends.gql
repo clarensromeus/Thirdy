@@ -1,0 +1,77 @@
+#-------------------->Queries<-----------------#
+
+query allFriendsRequests($allFriendRequestsId: ID!) {
+  allFriendRequests(_id: $allFriendRequestsId) {
+    _id
+    RequestId
+    AcceptedId
+    User {
+      _id
+      Firstname
+      Lastname
+      Image
+    }
+  }
+}
+
+query Friends_Sugestions($friendSuggestionsId2: ID!) {
+  FriendSuggestions(_id: $friendSuggestionsId2) {
+    _id
+    Firstname
+    Lastname
+    Image
+  }
+}
+
+query AllFriends($allFriendsId: ID!) {
+  AllFriends(_id: $allFriendsId) {
+    _id
+    RequestId
+    AcceptedId
+    createdAt
+    User {
+      _id
+      Firstname
+      Lastname
+      Image
+    }
+  }
+}
+
+#------------------->Mutations<-----------------#
+
+mutation FollowBack(
+  $AcceptedId: String!
+  $FriendId: String!
+  $userRequestId: ID!
+) {
+  followBack(
+    AcceptedId: $AcceptedId
+    friendId: $FriendId
+    userRequestId: $userRequestId
+  ) {
+    message
+    success
+  }
+}
+
+mutation rejectRequest($rejectRequestFriendId: String!) {
+  rejectRequest(friendId: $rejectRequestFriendId) {
+    message
+    success
+  }
+}
+
+mutation UnFollow($userId: ID!, $unFollowFriendId: ID!) {
+  unFollow(userId: $userId, friendId: $unFollowFriendId) {
+    message
+    success
+  }
+}
+
+mutation Follow($followRequestData: request!) {
+  follow(requestData: $followRequestData) {
+    message
+    success
+  }
+}

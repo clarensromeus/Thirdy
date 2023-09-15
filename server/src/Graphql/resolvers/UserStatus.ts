@@ -7,7 +7,7 @@ import { statusModel } from "../../Models";
 import { Resolvers } from "../../__generate__/types";
 import UploadFile from "../../Service/ImageUpload";
 import { ImageType } from "../../typings/upload";
-import MongoId from "../../Service/Scalar";
+import MongoId from "../../Service/MongoIdScalar";
 
 const __filename: string = fileURLToPath(import.meta.url);
 const __dirname: string = dirname(__filename);

@@ -1,28 +1,27 @@
 import GraphQLUpload from "graphql-upload/GraphQLUpload.mjs";
 import { PubSub } from "graphql-subscriptions";
-import lodash, { merge, concat } from "lodash";
+import lodash from "lodash";
+import { ObjectId, PopulatedDoc } from "mongoose";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
 // intenally crafted imports of ressources
 import { Resolvers } from "../../__generate__/types";
 import { chatModel, friendModel } from "../../Models/index.ts";
-import MongoId from "../../Service/Scalar.ts";
+import MongoId from "../../Service/MongoIdScalar.ts";
 import { CHAT_CHANNEL } from "../../Constants/index.ts";
 import { userModel } from "../../Models/User.ts";
+import UploadFile from "../../Service/ImageUpload.ts";
+import dateScalar from "../../Service/DataScalar.ts";
 
-interface Ichat {
-  _id: string;
-  ChatId: string;
-  Chat: string;
-  User: {
-    _id: string;
-    Firstname: string;
-    Lastname: string;
-    Image: string;
-  };
-}
+const { merge, concat, isNil } = lodash;
 
 const pubSub: PubSub = new PubSub();
 
+const __filename: string = fileURLToPath(import.meta.url);
+const __dirname: string = dirname(__filename);
+
 const Chat: Resolvers = {
+  Date: dateScalar,
   Upload: GraphQLUpload,
   MongoId: MongoId,
   Query: {
@@ -38,62 +37,128 @@ const Chat: Resolvers = {
         throw new Error(`${error}`);
       }
     },
-    /*  ChatRoom: async (__, { chatFilter: { friendId, activeUserId } }) => {
+    Chat: async (__, { chatUserInfo: { friendId, activeUserId } }) => {
       try {
         // retrieve all relatively friend messages sent by the active user
         const friendsChat = await userModel
           .findById({ _id: activeUserId })
-          .populate({ path: "Chats", match: { From: { $eq: friendId } } })
+          .populate({
+            path: "Chats",
+            match: { From: { $eq: friendId } },
+            // populate: { path: "From", select: "_id Firstname Lastname Image" },
+            populate: ["From", "To"],
+          })
           .select("Chats");
 
         // grab active user chats sent by a friend id relatively
         const activeUserChat = await userModel
           .findById({ _id: friendId })
-          .populate({ path: "Chats", match: { From: { $eq: activeUserId } } })
+          .populate({
+            path: "Chats",
+            match: {
+              From: { $eq: activeUserId },
+            },
+            populate: ["From", "To"],
+          })
           .select("Chats");
 
+        if (!activeUserChat) return null;
+        if (!friendsChat) return null;
+
         // concat active and friend user chats together
-        const chatRoom = concat(friendsChat?.Chats, activeUserChat?.Chats);
+        const chatRoom = concat(friendsChat.Chats, activeUserChat.Chats).sort(
+          (a, b) =>
+            /* @ts-ignore */
+            new Date(a.createdAt).valueOf() - new Date(b.createdAt).valueOf()
+        );
 
         return chatRoom;
       } catch (error) {
         throw new Error(`${error}`);
       }
-    }, */
+    },
   },
   Mutation: {
-    ChatWithFriends: async (__, { chatData, picture, chatFilter }) => {
+    ChatWithFriends: async (__, { chatInfo, picture }) => {
       try {
-        const { friendId, activeUserId } = chatFilter;
-        const { ChatId, Chat, To, From } = chatData;
-        // retrieve all relatively friend messages sent by the active user
-        const friendsChat = await userModel
-          .findById({ _id: "" })
-          .populate({ path: "Chats", match: { From: { $eq: "" } } })
-          .select("Chats");
+        const { Chat, To, From } = chatInfo;
 
-        // grab active user chats sent by a friend id relatively
-        const activeUserChat = await userModel
-          .findById({ _id: "" })
-          .populate({ path: "Chats", match: { From: { $eq: "" } } })
-          .select("Chats");
+        if (!isNil(picture)) {
+          const { public_id, serverUrl } = await UploadFile(
+            picture,
+            true,
+            __dirname,
+            "Thirdy_app"
+          );
 
-        // concat active and friend user chats together
-        const chatRoom = concat(friendsChat?.Chats, activeUserChat?.Chats);
-        // publish data data to CHAT_CHANNEL event
-        pubSub.publish(CHAT_CHANNEL, { chatRoom: chatRoom });
+          const createChat = await chatModel.create({
+            Chat,
+            To,
+            From,
+            PicturedMessage: serverUrl,
+            public_id,
+          });
 
-        return { message: "", success: true };
+          await userModel
+            .findOneAndUpdate({
+              $push: { Chats: createChat._id },
+            })
+            .where({ _id: To });
+
+          const chats = await chatModel
+            .findOne({ _id: createChat._id })
+            .populate({ path: "To", select: "_id Firstname Lastname Image" })
+            .populate({ path: "From", select: "_id Firstname Lastname Image" })
+            .select("-__v");
+
+          // publish message data to CHAT_CHANNEL event
+          pubSub.publish(CHAT_CHANNEL, { chatRoom: chats });
+
+          return {
+            message: "message successfully sent",
+            success: true,
+          };
+        }
+
+        const createChat = await chatModel.create({
+          Chat,
+          To,
+          From,
+          public_id: "",
+          PicturedMessage: "",
+        });
+
+        await userModel
+          .findOneAndUpdate({
+            $push: { Chats: createChat._id },
+          })
+          .where({ _id: To });
+
+        const chats = await chatModel
+          .findById({ _id: createChat._id })
+          .populate({ path: "To", select: "_id Firstname Lastname Image" })
+          .populate({ path: "From", select: "_id Firstname Lastname Image" })
+          .select("-__v -updatedAt");
+
+        // publish data message to CHAT_CHANNEL event
+        pubSub.publish(CHAT_CHANNEL, {
+          Chat: chats,
+        });
+
+        return {
+          message: "message successfully sent",
+          success: true,
+        };
       } catch (error) {
         throw new Error(`${error}`);
       }
     },
   },
   Subscription: {
-    ChatRoom: {
+    Chat: {
       subscribe: () => {
         return {
-          // listening to the channel event
+          // listening to the chat channel event
           [Symbol.asyncIterator]: () => pubSub.asyncIterator([CHAT_CHANNEL]),
         };
       },

@@ -38,7 +38,6 @@ import { INotiPopperProps } from "../typings/Notifications";
 import NotiPopper from "../components/NotificationPopper";
 
 const Home = (): JSX.Element => {
-  
   const [open, setOpen] = React.useState<boolean>(false);
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   // notifications popper state
@@ -73,6 +72,7 @@ const Home = (): JSX.Element => {
     anchorEl,
     setAnchorEl,
     open,
+    setOpen,
   };
 
   const NotificationsData: INotiPopperProps = {

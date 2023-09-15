@@ -44,7 +44,7 @@ class User {
   @prop({ type: () => String, required: true, lowercase: true })
   public DOB!: string;
 
-  @prop({ ref: () => Friend, required: false })
+  @prop({ ref: () => Friend, required: true, default: [] })
   public Friends?: Ref<Friend>[];
 
   @prop({ ref: () => Chat, required: true, default: [] })

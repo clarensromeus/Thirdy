@@ -1,0 +1,60 @@
+#---------------------->Queries<--------------------
+query Get_All_Post {
+  GetAllPosts {
+    _id
+    PostId
+    Title
+    PostImage
+    Comments {
+      _id
+      PostId
+      User {
+        _id
+        Firstname
+        Lastname
+        Image
+      }
+    }
+    Likes {
+      _id
+      PostId
+      User {
+        _id
+        Firstname
+        Lastname
+        Image
+      }
+    }
+    User {
+      _id
+      Firstname
+      Lastname
+      Image
+    }
+    createdAt
+    updatedAt
+  }
+}
+
+query GROUP_INFO($groupName: String!, $groupId: ID!) {
+  GroupInfo(groupName: $groupName, groupId: $groupId) {
+    _id
+    GroupName
+    GroupCoverImage
+    Privacy
+    GroupUsers {
+      _id
+      Firstname
+      Lastname
+      Image
+    }
+  }
+}
+
+#------------------------>Mutations<---------------------------
+mutation Create_Post($postData: postEntries, $picture: Upload!) {
+  CreatePost(postData: $postData, picture: $picture) {
+    message
+    success
+  }
+}

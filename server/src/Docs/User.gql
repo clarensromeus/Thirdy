@@ -1,0 +1,38 @@
+#------------------->Queries<-----------------
+query GetUseData($userDataId: ID!) {
+  userData(_id: $userDataId) {
+    _id
+    Firstname
+    Lastname
+    Email
+    Image
+    DOB
+    Sex
+    Bio
+    Password
+  }
+}
+
+query connection($connectionInfo: connectionInfo!) {
+  Connection(connectionInfo: $connectionInfo) {
+    message
+    success
+    token
+  }
+}
+
+#------------------->Mutations<-------------------
+mutation Registeration($registerInfo: registerInfo!) {
+  Registeration(registerInfo: $registerInfo) {
+    message
+    success
+    token
+  }
+}
+
+mutation Change_Profile($changeProfileFile2: Upload!, $id: String!) {
+  ChangeProfile(file: $changeProfileFile2, _id: $id) {
+    message
+    success
+  }
+}

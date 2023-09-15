@@ -19,4 +19,9 @@ type IAuthState = {
   Data: Partial<IinfoState<string>>;
 };
 
-export type { IAuthState, IGetData, IinfoState };
+interface IDrawer {
+  DialogOpen: boolean;
+  CloseDialog: () => void;
+}
+
+export type { IAuthState, IGetData, IinfoState, IDrawer };

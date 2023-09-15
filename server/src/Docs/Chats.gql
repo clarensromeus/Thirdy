@@ -1,0 +1,21 @@
+subscription ChatWithFriends {
+  ChatRoom {
+    _id
+    Chat
+    PicturedMessage
+    public_id
+    createdAt
+    To {
+      _id
+      Firstname
+      Lastname
+      Image
+    }
+    From {
+      _id
+      Firstname
+      Lastname
+      Image
+    }
+  }
+}

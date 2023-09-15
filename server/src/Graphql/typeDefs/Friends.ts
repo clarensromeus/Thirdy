@@ -18,7 +18,11 @@ export default gql`
   extend type Mutation {
     follow(requestData: request!): friendResponse!
     rejectRequest(friendId: String!): friendResponse
-    followBack(AcceptedId: String!, friendId: String!): friendResponse
+    followBack(
+      AcceptedId: String!
+      friendId: String!
+      userRequestId: ID!
+    ): friendResponse
     unFollow(userId: ID!, friendId: ID!): friendResponse
   }
 

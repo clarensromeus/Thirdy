@@ -8,7 +8,7 @@ import { Resolvers } from "../../__generate__/types.ts";
 import UploadFile from "../../Service/ImageUpload.ts";
 import { fileURLToPath } from "url";
 import { ImageType } from "../../typings/upload.ts";
-import MongoId from "../../Service/Scalar.ts";
+import MongoId from "../../Service/MongoIdScalar.ts";
 import { cloudinary } from "../../Utils/Cloudinary.ts";
 import { IContext } from "../../typings/Auth.ts";
 import { RandomUser } from "../../Seed/User.ts";

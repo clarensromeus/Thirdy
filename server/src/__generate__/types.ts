@@ -14,8 +14,21 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean; }
   Int: { input: number; output: number; }
   Float: { input: number; output: number; }
+  Date: { input: any; output: any; }
   MongoId: { input: any; output: any; }
   Upload: { input: any; output: any; }
+};
+
+export type ChatsIngroup = {
+  __typename?: 'ChatsIngroup';
+  Chat?: Maybe<Scalars['String']['output']>;
+  ChatPlacement: Scalars['Int']['output'];
+  From?: Maybe<User>;
+  PicturedMessage?: Maybe<Scalars['String']['output']>;
+  To?: Maybe<GroupData>;
+  _id: Scalars['MongoId']['output'];
+  createdAt?: Maybe<Scalars['Date']['output']>;
+  public_id?: Maybe<Scalars['String']['output']>;
 };
 
 export type File = {
@@ -33,11 +46,12 @@ export type Likes = {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  AddAdminRole?: Maybe<GroupResponse>;
   AddStatus?: Maybe<StatusResponse>;
   AddUser?: Maybe<GroupResponse>;
   ChangeCover?: Maybe<UploadResponse>;
   ChangeProfile?: Maybe<UploadResponse>;
-  ChatWithFriends?: Maybe<ResponseMessage>;
+  ChatWithFriends?: Maybe<MessageResponse>;
   ChatWithFriendsInGroups?: Maybe<GroupResponse>;
   CreatePost: PostResponse;
   DeleteStatusImage?: Maybe<StatusResponse>;
@@ -48,6 +62,7 @@ export type Mutation = {
   PostComments?: Maybe<PostResponse>;
   PostLikes?: Maybe<Likes>;
   Registeration: Response;
+  RemoveAdminRole?: Maybe<GroupResponse>;
   Retweet: PostResponse;
   Share?: Maybe<PostResponse>;
   User?: Maybe<PostResponse>;
@@ -58,6 +73,13 @@ export type Mutation = {
   rejectRequest?: Maybe<FriendResponse>;
   singleUpload?: Maybe<File>;
   unFollow?: Maybe<FriendResponse>;
+};
+
+
+export type MutationAddAdminRoleArgs = {
+  adminId: Scalars['ID']['input'];
+  groupId: Scalars['ID']['input'];
+  userId: Scalars['ID']['input'];
 };
 
 
@@ -88,15 +110,13 @@ export type MutationChangeProfileArgs = {
 
 
 export type MutationChatWithFriendsArgs = {
-  chatData: ChatData;
-  chatFilter: ChatFilter;
+  chatInfo: ChatInfo;
   picture?: InputMaybe<Scalars['Upload']['input']>;
 };
 
 
 export type MutationChatWithFriendsInGroupsArgs = {
-  chatData: ChatData;
-  chatFilter: ChatFilter;
+  dataFeed: DataFeed;
   picture?: InputMaybe<Scalars['Upload']['input']>;
 };
 
@@ -152,6 +172,13 @@ export type MutationRegisterationArgs = {
 };
 
 
+export type MutationRemoveAdminRoleArgs = {
+  adminId: Scalars['ID']['input'];
+  groupId: Scalars['ID']['input'];
+  userId: Scalars['ID']['input'];
+};
+
+
 export type MutationRetweetArgs = {
   retweetData: RetweetData;
 };
@@ -182,6 +209,7 @@ export type MutationFollowArgs = {
 export type MutationFollowBackArgs = {
   AcceptedId: Scalars['String']['input'];
   friendId: Scalars['String']['input'];
+  userRequestId: Scalars['ID']['input'];
 };
 
 
@@ -237,7 +265,8 @@ export type Posts = {
 export type Query = {
   __typename?: 'Query';
   AllFriends?: Maybe<Array<Friends>>;
-  ChatRoom?: Maybe<Array<Maybe<ChatResponse>>>;
+  Chat?: Maybe<Array<Maybe<ChatResponse>>>;
+  ChatWithFriendsInGroups?: Maybe<Array<Maybe<ChatsIngroup>>>;
   Connection: Response;
   DeletePost: PostResponse;
   FriendRequest?: Maybe<Friends>;
@@ -247,12 +276,14 @@ export type Query = {
   GetChatFriends?: Maybe<Array<ListOfFriends>>;
   GetallStatus: UserStatus;
   GroupInfo?: Maybe<GroupData>;
+  GroupUsers?: Maybe<Array<Maybe<User>>>;
   MutualFriends?: Maybe<Array<Maybe<Friends>>>;
   PostComments: Array<CommentsResponse>;
   PostLikes: Array<LikesResponse>;
   TestUser?: Maybe<User>;
   _?: Maybe<Scalars['String']['output']>;
   allFriendRequests?: Maybe<Array<Friends>>;
+  allUsers?: Maybe<Array<Maybe<AllUser>>>;
   hello: Scalars['String']['output'];
   uploads?: Maybe<Scalars['String']['output']>;
   userData?: Maybe<UserInfo>;
@@ -264,8 +295,13 @@ export type QueryAllFriendsArgs = {
 };
 
 
-export type QueryChatRoomArgs = {
-  chatFilter: ChatFilter;
+export type QueryChatArgs = {
+  chatUserInfo: ChatUserInfo;
+};
+
+
+export type QueryChatWithFriendsInGroupsArgs = {
+  groupId: Scalars['ID']['input'];
 };
 
 
@@ -305,6 +341,12 @@ export type QueryGroupInfoArgs = {
 };
 
 
+export type QueryGroupUsersArgs = {
+  groupId: Scalars['ID']['input'];
+  groupName: Scalars['String']['input'];
+};
+
+
 export type QueryMutualFriendsArgs = {
   friendId: Scalars['ID']['input'];
   userId: Scalars['ID']['input'];
@@ -336,8 +378,8 @@ export type StatusInfo = {
 
 export type Subscription = {
   __typename?: 'Subscription';
-  ChatRoom?: Maybe<Array<ChatResponse>>;
-  ChatWithFriendsInGroups?: Maybe<Scalars['String']['output']>;
+  Chat?: Maybe<ChatResponse>;
+  ChatWithFriendsInGroups?: Maybe<ChatsIngroup>;
   _?: Maybe<Scalars['String']['output']>;
 };
 
@@ -355,30 +397,41 @@ export type User = {
   updatedAt?: Maybe<Scalars['String']['output']>;
 };
 
-export type ChatData = {
-  Chat?: InputMaybe<Scalars['ID']['input']>;
-  ChatId: Scalars['ID']['input'];
-  From: Scalars['String']['input'];
-  PublicId?: InputMaybe<Scalars['String']['input']>;
-  To: Scalars['String']['input'];
+export type AllUser = {
+  __typename?: 'allUser';
+  Email?: Maybe<Scalars['String']['output']>;
+  Firstname: Scalars['String']['output'];
+  Friends?: Maybe<Array<Maybe<Friend>>>;
+  Image?: Maybe<Scalars['String']['output']>;
+  Lastname: Scalars['String']['output'];
+  _id?: Maybe<Scalars['MongoId']['output']>;
 };
 
 export type ChatFilter = {
   activeUser: Scalars['ID']['input'];
-  activeUserId: Scalars['ID']['input'];
   friendId: Scalars['ID']['input'];
+};
+
+export type ChatInfo = {
+  Chat?: InputMaybe<Scalars['String']['input']>;
+  From: Scalars['ID']['input'];
+  To: Scalars['ID']['input'];
 };
 
 export type ChatResponse = {
   __typename?: 'chatResponse';
   Chat?: Maybe<Scalars['String']['output']>;
-  ChatId: Scalars['ID']['output'];
   From?: Maybe<User>;
   PicturedMessage?: Maybe<Scalars['String']['output']>;
-  PublicId?: Maybe<Scalars['String']['output']>;
   To?: Maybe<User>;
   _id: Scalars['MongoId']['output'];
-  createdAt: Scalars['String']['output'];
+  createdAt?: Maybe<Scalars['Date']['output']>;
+  public_id?: Maybe<Scalars['String']['output']>;
+};
+
+export type ChatUserInfo = {
+  activeUserId: Scalars['ID']['input'];
+  friendId: Scalars['ID']['input'];
 };
 
 export type Comments = {
@@ -418,10 +471,27 @@ export type CreateData = {
   Users?: InputMaybe<Array<Scalars['ID']['input']>>;
 };
 
+export type DataFeed = {
+  Chat?: InputMaybe<Scalars['ID']['input']>;
+  ChatPlacement: Scalars['Int']['input'];
+  From: Scalars['ID']['input'];
+  GroupId: Scalars['ID']['input'];
+  To: Scalars['ID']['input'];
+};
+
 export type EditPost = {
   Picture?: InputMaybe<Scalars['Upload']['input']>;
   PostId: Scalars['String']['input'];
   Title?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type Friend = {
+  __typename?: 'friend';
+  AcceptedId?: Maybe<Scalars['String']['output']>;
+  Receiver?: Maybe<User>;
+  RequestId?: Maybe<Scalars['String']['output']>;
+  User?: Maybe<User>;
+  _id?: Maybe<Scalars['MongoId']['output']>;
 };
 
 export type FriendResponse = {
@@ -442,13 +512,12 @@ export type Friends = {
 export type GroupData = {
   __typename?: 'groupData';
   GroupCoverImage?: Maybe<Scalars['String']['output']>;
-  GroupName: Scalars['String']['output'];
+  GroupName?: Maybe<Scalars['String']['output']>;
   GroupUsers?: Maybe<Array<Maybe<User>>>;
-  Privacy: Scalars['String']['output'];
+  Privacy?: Maybe<Scalars['String']['output']>;
   Public_Id?: Maybe<Scalars['String']['output']>;
   _id: Scalars['MongoId']['output'];
-  createdAt?: Maybe<Scalars['String']['output']>;
-  updatedAt?: Maybe<Scalars['String']['output']>;
+  createdAt?: Maybe<Scalars['Date']['output']>;
 };
 
 export type GroupResponse = {
@@ -476,6 +545,12 @@ export type ListOfFriends = {
   RequestId?: Maybe<Scalars['String']['output']>;
   User: User;
   _id: Scalars['MongoId']['output'];
+};
+
+export type MessageResponse = {
+  __typename?: 'messageResponse';
+  message?: Maybe<Scalars['String']['output']>;
+  success?: Maybe<Scalars['Boolean']['output']>;
 };
 
 export type Online = {
@@ -514,12 +589,6 @@ export type Request = {
   RequestId: Scalars['String']['input'];
   User: Scalars['ID']['input'];
   _id: Scalars['ID']['input'];
-};
-
-export type ResponseMessage = {
-  __typename?: 'responseMessage';
-  message?: Maybe<Scalars['String']['output']>;
-  success?: Maybe<Scalars['Boolean']['output']>;
 };
 
 export type RetweetData = {
@@ -567,7 +636,7 @@ export type UserInfo = {
   Lastname: Scalars['String']['output'];
   Password?: Maybe<Scalars['String']['output']>;
   Sex: Scalars['String']['output'];
-  _id?: Maybe<Scalars['String']['output']>;
+  _id?: Maybe<Scalars['MongoId']['output']>;
 };
 
 export type UserStatus = {
@@ -649,8 +718,11 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = {
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
+  ChatsIngroup: ResolverTypeWrapper<ChatsIngroup>;
+  Date: ResolverTypeWrapper<Scalars['Date']['output']>;
   File: ResolverTypeWrapper<File>;
   ID: ResolverTypeWrapper<Scalars['ID']['output']>;
+  Int: ResolverTypeWrapper<Scalars['Int']['output']>;
   Likes: ResolverTypeWrapper<Likes>;
   MongoId: ResolverTypeWrapper<Scalars['MongoId']['output']>;
   Mutation: ResolverTypeWrapper<{}>;
@@ -664,15 +736,19 @@ export type ResolversTypes = {
   Subscription: ResolverTypeWrapper<{}>;
   Upload: ResolverTypeWrapper<Scalars['Upload']['output']>;
   User: ResolverTypeWrapper<User>;
-  chatData: ChatData;
+  allUser: ResolverTypeWrapper<AllUser>;
   chatFilter: ChatFilter;
+  chatInfo: ChatInfo;
   chatResponse: ResolverTypeWrapper<ChatResponse>;
+  chatUserInfo: ChatUserInfo;
   comments: ResolverTypeWrapper<Comments>;
   commentsData: CommentsData;
   commentsResponse: ResolverTypeWrapper<CommentsResponse>;
   connectionInfo: ConnectionInfo;
   createData: CreateData;
+  dataFeed: DataFeed;
   editPost: EditPost;
+  friend: ResolverTypeWrapper<Friend>;
   friendResponse: ResolverTypeWrapper<FriendResponse>;
   friends: ResolverTypeWrapper<Friends>;
   groupData: ResolverTypeWrapper<GroupData>;
@@ -680,12 +756,12 @@ export type ResolversTypes = {
   likesData: LikesData;
   likesResponse: ResolverTypeWrapper<LikesResponse>;
   listOfFriends: ResolverTypeWrapper<ListOfFriends>;
+  messageResponse: ResolverTypeWrapper<MessageResponse>;
   online: ResolverTypeWrapper<Online>;
   postEntries: PostEntries;
   postResponse: ResolverTypeWrapper<PostResponse>;
   registerInfo: RegisterInfo;
   request: Request;
-  responseMessage: ResolverTypeWrapper<ResponseMessage>;
   retweetData: RetweetData;
   shareData: ShareData;
   statusResponse: ResolverTypeWrapper<StatusResponse>;
@@ -698,8 +774,11 @@ export type ResolversTypes = {
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = {
   Boolean: Scalars['Boolean']['output'];
+  ChatsIngroup: ChatsIngroup;
+  Date: Scalars['Date']['output'];
   File: File;
   ID: Scalars['ID']['output'];
+  Int: Scalars['Int']['output'];
   Likes: Likes;
   MongoId: Scalars['MongoId']['output'];
   Mutation: {};
@@ -713,15 +792,19 @@ export type ResolversParentTypes = {
   Subscription: {};
   Upload: Scalars['Upload']['output'];
   User: User;
-  chatData: ChatData;
+  allUser: AllUser;
   chatFilter: ChatFilter;
+  chatInfo: ChatInfo;
   chatResponse: ChatResponse;
+  chatUserInfo: ChatUserInfo;
   comments: Comments;
   commentsData: CommentsData;
   commentsResponse: CommentsResponse;
   connectionInfo: ConnectionInfo;
   createData: CreateData;
+  dataFeed: DataFeed;
   editPost: EditPost;
+  friend: Friend;
   friendResponse: FriendResponse;
   friends: Friends;
   groupData: GroupData;
@@ -729,12 +812,12 @@ export type ResolversParentTypes = {
   likesData: LikesData;
   likesResponse: LikesResponse;
   listOfFriends: ListOfFriends;
+  messageResponse: MessageResponse;
   online: Online;
   postEntries: PostEntries;
   postResponse: PostResponse;
   registerInfo: RegisterInfo;
   request: Request;
-  responseMessage: ResponseMessage;
   retweetData: RetweetData;
   shareData: ShareData;
   statusResponse: StatusResponse;
@@ -743,6 +826,22 @@ export type ResolversParentTypes = {
   userInfo: UserInfo;
   userStatus: UserStatus;
 };
+
+export type ChatsIngroupResolvers<ContextType = any, ParentType extends ResolversParentTypes['ChatsIngroup'] = ResolversParentTypes['ChatsIngroup']> = {
+  Chat?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  ChatPlacement?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  From?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>;
+  PicturedMessage?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  To?: Resolver<Maybe<ResolversTypes['groupData']>, ParentType, ContextType>;
+  _id?: Resolver<ResolversTypes['MongoId'], ParentType, ContextType>;
+  createdAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
+  public_id?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export interface DateScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['Date'], any> {
+  name: 'Date';
+}
 
 export type FileResolvers<ContextType = any, ParentType extends ResolversParentTypes['File'] = ResolversParentTypes['File']> = {
   serverUrl?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
@@ -762,12 +861,13 @@ export interface MongoIdScalarConfig extends GraphQLScalarTypeConfig<ResolversTy
 }
 
 export type MutationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
+  AddAdminRole?: Resolver<Maybe<ResolversTypes['groupResponse']>, ParentType, ContextType, RequireFields<MutationAddAdminRoleArgs, 'adminId' | 'groupId' | 'userId'>>;
   AddStatus?: Resolver<Maybe<ResolversTypes['statusResponse']>, ParentType, ContextType, RequireFields<MutationAddStatusArgs, '_id' | 'picture' | 'userId'>>;
   AddUser?: Resolver<Maybe<ResolversTypes['groupResponse']>, ParentType, ContextType, RequireFields<MutationAddUserArgs, 'adminId' | 'groupId' | 'guestId'>>;
   ChangeCover?: Resolver<Maybe<ResolversTypes['uploadResponse']>, ParentType, ContextType, RequireFields<MutationChangeCoverArgs, '_id' | 'file'>>;
   ChangeProfile?: Resolver<Maybe<ResolversTypes['uploadResponse']>, ParentType, ContextType, RequireFields<MutationChangeProfileArgs, '_id' | 'file'>>;
-  ChatWithFriends?: Resolver<Maybe<ResolversTypes['responseMessage']>, ParentType, ContextType, RequireFields<MutationChatWithFriendsArgs, 'chatData' | 'chatFilter'>>;
-  ChatWithFriendsInGroups?: Resolver<Maybe<ResolversTypes['groupResponse']>, ParentType, ContextType, RequireFields<MutationChatWithFriendsInGroupsArgs, 'chatData' | 'chatFilter'>>;
+  ChatWithFriends?: Resolver<Maybe<ResolversTypes['messageResponse']>, ParentType, ContextType, RequireFields<MutationChatWithFriendsArgs, 'chatInfo'>>;
+  ChatWithFriendsInGroups?: Resolver<Maybe<ResolversTypes['groupResponse']>, ParentType, ContextType, RequireFields<MutationChatWithFriendsInGroupsArgs, 'dataFeed'>>;
   CreatePost?: Resolver<ResolversTypes['postResponse'], ParentType, ContextType, Partial<MutationCreatePostArgs>>;
   DeleteStatusImage?: Resolver<Maybe<ResolversTypes['statusResponse']>, ParentType, ContextType, RequireFields<MutationDeleteStatusImageArgs, 'StatusId' | 'userId'>>;
   EditPost?: Resolver<ResolversTypes['postResponse'], ParentType, ContextType, RequireFields<MutationEditPostArgs, 'editData'>>;
@@ -777,13 +877,14 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   PostComments?: Resolver<Maybe<ResolversTypes['postResponse']>, ParentType, ContextType, RequireFields<MutationPostCommentsArgs, 'commentsData'>>;
   PostLikes?: Resolver<Maybe<ResolversTypes['Likes']>, ParentType, ContextType, RequireFields<MutationPostLikesArgs, 'likesData'>>;
   Registeration?: Resolver<ResolversTypes['Response'], ParentType, ContextType, RequireFields<MutationRegisterationArgs, 'registerInfo'>>;
+  RemoveAdminRole?: Resolver<Maybe<ResolversTypes['groupResponse']>, ParentType, ContextType, RequireFields<MutationRemoveAdminRoleArgs, 'adminId' | 'groupId' | 'userId'>>;
   Retweet?: Resolver<ResolversTypes['postResponse'], ParentType, ContextType, RequireFields<MutationRetweetArgs, 'retweetData'>>;
   Share?: Resolver<Maybe<ResolversTypes['postResponse']>, ParentType, ContextType, RequireFields<MutationShareArgs, 'shareData'>>;
   User?: Resolver<Maybe<ResolversTypes['postResponse']>, ParentType, ContextType, Partial<MutationUserArgs>>;
   _?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   createGroup?: Resolver<Maybe<ResolversTypes['groupResponse']>, ParentType, ContextType, RequireFields<MutationCreateGroupArgs, 'createData'>>;
   follow?: Resolver<ResolversTypes['friendResponse'], ParentType, ContextType, RequireFields<MutationFollowArgs, 'requestData'>>;
-  followBack?: Resolver<Maybe<ResolversTypes['friendResponse']>, ParentType, ContextType, RequireFields<MutationFollowBackArgs, 'AcceptedId' | 'friendId'>>;
+  followBack?: Resolver<Maybe<ResolversTypes['friendResponse']>, ParentType, ContextType, RequireFields<MutationFollowBackArgs, 'AcceptedId' | 'friendId' | 'userRequestId'>>;
   rejectRequest?: Resolver<Maybe<ResolversTypes['friendResponse']>, ParentType, ContextType, RequireFields<MutationRejectRequestArgs, 'friendId'>>;
   singleUpload?: Resolver<Maybe<ResolversTypes['File']>, ParentType, ContextType, RequireFields<MutationSingleUploadArgs, 'Email' | 'file'>>;
   unFollow?: Resolver<Maybe<ResolversTypes['friendResponse']>, ParentType, ContextType, RequireFields<MutationUnFollowArgs, 'friendId' | 'userId'>>;
@@ -817,7 +918,8 @@ export type PostsResolvers<ContextType = any, ParentType extends ResolversParent
 
 export type QueryResolvers<ContextType = any, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
   AllFriends?: Resolver<Maybe<Array<ResolversTypes['friends']>>, ParentType, ContextType, RequireFields<QueryAllFriendsArgs, '_id'>>;
-  ChatRoom?: Resolver<Maybe<Array<Maybe<ResolversTypes['chatResponse']>>>, ParentType, ContextType, RequireFields<QueryChatRoomArgs, 'chatFilter'>>;
+  Chat?: Resolver<Maybe<Array<Maybe<ResolversTypes['chatResponse']>>>, ParentType, ContextType, RequireFields<QueryChatArgs, 'chatUserInfo'>>;
+  ChatWithFriendsInGroups?: Resolver<Maybe<Array<Maybe<ResolversTypes['ChatsIngroup']>>>, ParentType, ContextType, RequireFields<QueryChatWithFriendsInGroupsArgs, 'groupId'>>;
   Connection?: Resolver<ResolversTypes['Response'], ParentType, ContextType, RequireFields<QueryConnectionArgs, 'connectionInfo'>>;
   DeletePost?: Resolver<ResolversTypes['postResponse'], ParentType, ContextType, RequireFields<QueryDeletePostArgs, 'PostId'>>;
   FriendRequest?: Resolver<Maybe<ResolversTypes['friends']>, ParentType, ContextType, RequireFields<QueryFriendRequestArgs, 'userId'>>;
@@ -827,12 +929,14 @@ export type QueryResolvers<ContextType = any, ParentType extends ResolversParent
   GetChatFriends?: Resolver<Maybe<Array<ResolversTypes['listOfFriends']>>, ParentType, ContextType, RequireFields<QueryGetChatFriendsArgs, 'userId'>>;
   GetallStatus?: Resolver<ResolversTypes['userStatus'], ParentType, ContextType, RequireFields<QueryGetallStatusArgs, 'userId'>>;
   GroupInfo?: Resolver<Maybe<ResolversTypes['groupData']>, ParentType, ContextType, RequireFields<QueryGroupInfoArgs, 'groupId' | 'groupName'>>;
+  GroupUsers?: Resolver<Maybe<Array<Maybe<ResolversTypes['User']>>>, ParentType, ContextType, RequireFields<QueryGroupUsersArgs, 'groupId' | 'groupName'>>;
   MutualFriends?: Resolver<Maybe<Array<Maybe<ResolversTypes['friends']>>>, ParentType, ContextType, RequireFields<QueryMutualFriendsArgs, 'friendId' | 'userId'>>;
   PostComments?: Resolver<Array<ResolversTypes['commentsResponse']>, ParentType, ContextType>;
   PostLikes?: Resolver<Array<ResolversTypes['likesResponse']>, ParentType, ContextType>;
   TestUser?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>;
   _?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   allFriendRequests?: Resolver<Maybe<Array<ResolversTypes['friends']>>, ParentType, ContextType, RequireFields<QueryAllFriendRequestsArgs, '_id'>>;
+  allUsers?: Resolver<Maybe<Array<Maybe<ResolversTypes['allUser']>>>, ParentType, ContextType>;
   hello?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   uploads?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   userData?: Resolver<Maybe<ResolversTypes['userInfo']>, ParentType, ContextType, RequireFields<QueryUserDataArgs, '_id'>>;
@@ -853,8 +957,8 @@ export type StatusInfoResolvers<ContextType = any, ParentType extends ResolversP
 };
 
 export type SubscriptionResolvers<ContextType = any, ParentType extends ResolversParentTypes['Subscription'] = ResolversParentTypes['Subscription']> = {
-  ChatRoom?: SubscriptionResolver<Maybe<Array<ResolversTypes['chatResponse']>>, "ChatRoom", ParentType, ContextType>;
-  ChatWithFriendsInGroups?: SubscriptionResolver<Maybe<ResolversTypes['String']>, "ChatWithFriendsInGroups", ParentType, ContextType>;
+  Chat?: SubscriptionResolver<Maybe<ResolversTypes['chatResponse']>, "Chat", ParentType, ContextType>;
+  ChatWithFriendsInGroups?: SubscriptionResolver<Maybe<ResolversTypes['ChatsIngroup']>, "ChatWithFriendsInGroups", ParentType, ContextType>;
   _?: SubscriptionResolver<Maybe<ResolversTypes['String']>, "_", ParentType, ContextType>;
 };
 
@@ -876,15 +980,24 @@ export type UserResolvers<ContextType = any, ParentType extends ResolversParentT
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type AllUserResolvers<ContextType = any, ParentType extends ResolversParentTypes['allUser'] = ResolversParentTypes['allUser']> = {
+  Email?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  Firstname?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  Friends?: Resolver<Maybe<Array<Maybe<ResolversTypes['friend']>>>, ParentType, ContextType>;
+  Image?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  Lastname?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  _id?: Resolver<Maybe<ResolversTypes['MongoId']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type ChatResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['chatResponse'] = ResolversParentTypes['chatResponse']> = {
   Chat?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  ChatId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   From?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>;
   PicturedMessage?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  PublicId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   To?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>;
   _id?: Resolver<ResolversTypes['MongoId'], ParentType, ContextType>;
-  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  createdAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
+  public_id?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -901,6 +1014,15 @@ export type CommentsResponseResolvers<ContextType = any, ParentType extends Reso
   PostId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   User?: Resolver<ResolversTypes['User'], ParentType, ContextType>;
   _id?: Resolver<ResolversTypes['MongoId'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type FriendResolvers<ContextType = any, ParentType extends ResolversParentTypes['friend'] = ResolversParentTypes['friend']> = {
+  AcceptedId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  Receiver?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>;
+  RequestId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  User?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>;
+  _id?: Resolver<Maybe<ResolversTypes['MongoId']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -921,13 +1043,12 @@ export type FriendsResolvers<ContextType = any, ParentType extends ResolversPare
 
 export type GroupDataResolvers<ContextType = any, ParentType extends ResolversParentTypes['groupData'] = ResolversParentTypes['groupData']> = {
   GroupCoverImage?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  GroupName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  GroupName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   GroupUsers?: Resolver<Maybe<Array<Maybe<ResolversTypes['User']>>>, ParentType, ContextType>;
-  Privacy?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  Privacy?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   Public_Id?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   _id?: Resolver<ResolversTypes['MongoId'], ParentType, ContextType>;
-  createdAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  updatedAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  createdAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -952,6 +1073,12 @@ export type ListOfFriendsResolvers<ContextType = any, ParentType extends Resolve
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type MessageResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['messageResponse'] = ResolversParentTypes['messageResponse']> = {
+  message?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  success?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type OnlineResolvers<ContextType = any, ParentType extends ResolversParentTypes['online'] = ResolversParentTypes['online']> = {
   status?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   username?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
@@ -960,12 +1087,6 @@ export type OnlineResolvers<ContextType = any, ParentType extends ResolversParen
 };
 
 export type PostResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['postResponse'] = ResolversParentTypes['postResponse']> = {
-  message?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  success?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ResponseMessageResolvers<ContextType = any, ParentType extends ResolversParentTypes['responseMessage'] = ResolversParentTypes['responseMessage']> = {
   message?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   success?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -1000,7 +1121,7 @@ export type UserInfoResolvers<ContextType = any, ParentType extends ResolversPar
   Lastname?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   Password?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   Sex?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  _id?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  _id?: Resolver<Maybe<ResolversTypes['MongoId']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -1012,6 +1133,8 @@ export type UserStatusResolvers<ContextType = any, ParentType extends ResolversP
 };
 
 export type Resolvers<ContextType = any> = {
+  ChatsIngroup?: ChatsIngroupResolvers<ContextType>;
+  Date?: GraphQLScalarType;
   File?: FileResolvers<ContextType>;
   Likes?: LikesResolvers<ContextType>;
   MongoId?: GraphQLScalarType;
@@ -1024,18 +1147,20 @@ export type Resolvers<ContextType = any> = {
   Subscription?: SubscriptionResolvers<ContextType>;
   Upload?: GraphQLScalarType;
   User?: UserResolvers<ContextType>;
+  allUser?: AllUserResolvers<ContextType>;
   chatResponse?: ChatResponseResolvers<ContextType>;
   comments?: CommentsResolvers<ContextType>;
   commentsResponse?: CommentsResponseResolvers<ContextType>;
+  friend?: FriendResolvers<ContextType>;
   friendResponse?: FriendResponseResolvers<ContextType>;
   friends?: FriendsResolvers<ContextType>;
   groupData?: GroupDataResolvers<ContextType>;
   groupResponse?: GroupResponseResolvers<ContextType>;
   likesResponse?: LikesResponseResolvers<ContextType>;
   listOfFriends?: ListOfFriendsResolvers<ContextType>;
+  messageResponse?: MessageResponseResolvers<ContextType>;
   online?: OnlineResolvers<ContextType>;
   postResponse?: PostResponseResolvers<ContextType>;
-  responseMessage?: ResponseMessageResolvers<ContextType>;
   statusResponse?: StatusResponseResolvers<ContextType>;
   suggestions?: SuggestionsResolvers<ContextType>;
   uploadResponse?: UploadResponseResolvers<ContextType>;

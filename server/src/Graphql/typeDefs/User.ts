@@ -7,6 +7,7 @@ export default gql`
     hello: String!
     userData(_id: ID!): userInfo
     Connection(connectionInfo: connectionInfo!): Response!
+    allUsers: [allUser]
   }
   #________________Mutations_________________
   extend type Mutation {
@@ -29,7 +30,7 @@ export default gql`
   }
 
   type userInfo {
-    _id: String
+    _id: MongoId
     Firstname: String!
     Lastname: String!
     Email: String
@@ -38,6 +39,30 @@ export default gql`
     Sex: String!
     DOB: String!
     Bio: String
+  }
+
+  type User {
+    _id: MongoId
+    Firstname: String
+    Lastname: String
+    Image: String
+  }
+
+  type friend {
+    _id: MongoId
+    RequestId: String
+    AcceptedId: String
+    User: User
+    Receiver: User
+  }
+
+  type allUser {
+    _id: MongoId
+    Firstname: String!
+    Lastname: String!
+    Email: String
+    Image: String
+    Friends: [friend]
   }
 
   type uploadResponse {

@@ -22,7 +22,7 @@ const Friends: Resolvers = {
     AllFriends: async (__, { _id }) => {
       try {
         const friends = await friendModel
-          .find({ UserReceiverId: _id })
+          .find({ AcceptedId: _id })
           .populate("User");
 
         return friends;
@@ -107,7 +107,7 @@ const Friends: Resolvers = {
       try {
         const allFriends = await friendModel
           .find()
-          .where({ UserReceiverId: _id })
+          .where({ UserReceiverId: _id, AcceptedId: { $ne: _id } })
           .populate({ path: "User", select: "_id Firstname Lastname Image" });
 
         return allFriends;
@@ -142,10 +142,10 @@ const Friends: Resolvers = {
         throw new Error(`${error}`);
       }
     },
-    followBack: async (__, { AcceptedId, friendId }) => {
+    followBack: async (__, { AcceptedId, friendId, userRequestId }) => {
       try {
         const isAccepted = await friendModel
-          .findOneAndUpdate({ AcceptedId })
+          .findOneAndUpdate({ AcceptedId, Receiver: AcceptedId })
           .where({ _id: friendId });
 
         if (!isAccepted) {
@@ -155,10 +155,15 @@ const Friends: Resolvers = {
           };
         }
 
-        // push the friend id reference to the user array of friends
+        // push the friend id reference to the active user array of friends
         await userModel
           .findOneAndUpdate({ $push: { Friends: friendId } })
           .where({ _id: AcceptedId });
+
+        // push the active user id reference to the friend user array of friends
+        await userModel
+          .findOneAndUpdate({ $push: { Friends: friendId } })
+          .where({ _id: userRequestId });
 
         return {
           message: "request accepted",

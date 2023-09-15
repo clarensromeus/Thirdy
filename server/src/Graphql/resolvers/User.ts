@@ -57,9 +57,25 @@ const UserResolver: Resolvers = {
         });
       }
     },
-    hello: (__, args, contextValue) => {
-      console.log(contextValue);
-      return "let us go ";
+    allUsers: async (__, {}) => {
+      try {
+        const users = await userModel
+          .find({ _id: { $ne: "64d7b561eda1c02a4950abb0" } })
+          .populate({
+            path: "Friends",
+            populate: ["User", "Receiver"],
+          });
+
+        const users2 = await userModel
+          .findById({
+            _id: "64fde80479a37b706df8d546",
+          })
+          .populate({ path: "Friends" });
+
+        return users;
+      } catch (error) {
+        throw new Error(`${error}`);
+      }
     },
     Connection: async (_: any, args) => {
       try {

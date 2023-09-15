@@ -3,25 +3,22 @@ import { gql } from "graphql-tag";
 export default gql`
   #------------------>Scalars<-------------------#
   scalar MongoId
+  scalar Date
 
   #------------------>Query<---------------------#
   extend type Query {
     GetChatFriends(userId: String!): [listOfFriends!]
-    ChatRoom(chatFilter: chatFilter!): [chatResponse]
+    Chat(chatUserInfo: chatUserInfo!): [chatResponse]
   }
   #------------------->Mutation<-----------------#
   extend type Mutation {
-    ChatWithFriends(
-      chatData: chatData!
-      picture: Upload
-      chatFilter: chatFilter!
-    ): responseMessage
+    ChatWithFriends(chatInfo: chatInfo!, picture: Upload): messageResponse
   }
 
   #----------------->Subscription<---------------#
 
   extend type Subscription {
-    ChatRoom: [chatResponse!]
+    Chat: chatResponse
   }
 
   #------------------->Types<--------------------#
@@ -47,30 +44,27 @@ export default gql`
 
   type chatResponse {
     _id: MongoId!
-    ChatId: ID!
     Chat: String
-    PublicId: String
+    public_id: String
     PicturedMessage: String
     To: User
     From: User
-    createdAt: String!
+    createdAt: Date
   }
 
-  type responseMessage {
+  type messageResponse {
     message: String
     success: Boolean
   }
 
   #-------------------->Inputs<--------------------#
-  input chatData {
-    ChatId: ID!
-    Chat: ID
-    PublicId: String
-    To: String!
-    From: String!
+  input chatInfo {
+    Chat: String
+    To: ID!
+    From: ID!
   }
 
-  input chatFilter {
+  input chatUserInfo {
     friendId: ID!
     activeUserId: ID!
   }

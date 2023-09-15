@@ -1,0 +1,37 @@
+#-------------------->Queries<------------------------#
+query GetAllGroups {
+  GetAllGroups {
+    _id
+    GroupCoverImage
+    GroupName
+    Privacy
+    createdAt
+  }
+}
+
+query ChatInGroups($chatWithFriendsInGroupsGroupId2: ID!) {
+  ChatWithFriendsInGroups(groupId: $chatWithFriendsInGroupsGroupId2) {
+    _id
+    Chat
+    ChatPlacement
+    From {
+      _id
+      Firstname
+      Lastname
+      Image
+    }
+    To {
+      _id
+      GroupName
+    }
+  }
+}
+
+
+#--------------------->Mutations<-----------------------#
+mutation Create_Group($createData: createData!, $createGroupFile2: Upload) {
+  createGroup(createData: $createData, file: $createGroupFile2) {
+    message
+    success
+  }
+}

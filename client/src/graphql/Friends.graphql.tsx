@@ -54,8 +54,16 @@ const FOLLOW_FRIENDS = gql`
 `;
 
 const FOLLOW_FRIENDS_BACK = gql`
-  mutation FollowBack($acceptedId: String!, $friendId: String!) {
-    followBack(AcceptedId: $acceptedId, friendId: $friendId) {
+  mutation FollowBack(
+    $AcceptedId: String!
+    $FriendId: String!
+    $userRequestId: ID!
+  ) {
+    followBack(
+      AcceptedId: $AcceptedId
+      friendId: $FriendId
+      userRequestId: $userRequestId
+    ) {
       message
       success
     }

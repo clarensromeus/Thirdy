@@ -3,11 +3,14 @@ import { gql } from "graphql-tag";
 export default gql`
   #------------------>Scalar<------------------------#
   scalar MongoId
+  scalar Date
 
   #------------------>Queries<------------------------#
   extend type Query {
     GetAllGroups: [groupData!]
     GroupInfo(groupName: String!, groupId: ID!): groupData
+    ChatWithFriendsInGroups(groupId: ID!): [ChatsIngroup]
+    GroupUsers(groupName: String!, groupId: ID!): [User]
   }
 
   #------------------>Mutations<------------------------#
@@ -16,16 +19,14 @@ export default gql`
     JoinGroup(_id: ID!, GroupId: ID!): groupResponse
     LeaveGroup(_id: ID!, GroupId: ID!): groupResponse
     AddUser(adminId: ID!, guestId: ID!, groupId: ID!): groupResponse
-    ChatWithFriendsInGroups(
-      chatData: chatData!
-      picture: Upload
-      chatFilter: chatFilter!
-    ): groupResponse
+    ChatWithFriendsInGroups(dataFeed: dataFeed!, picture: Upload): groupResponse
     ExcludeUser(adminId: ID!, guestId: ID!, groupId: ID!): groupResponse
+    AddAdminRole(adminId: ID!, userId: ID!, groupId: ID!): groupResponse
+    RemoveAdminRole(adminId: ID!, userId: ID!, groupId: ID!): groupResponse
   }
 
   extend type Subscription {
-    ChatWithFriendsInGroups: String
+    ChatWithFriendsInGroups: ChatsIngroup
   }
 
   #------------------>Types<---------------------#
@@ -55,23 +56,26 @@ export default gql`
 
   type groupData {
     _id: MongoId!
-    GroupName: String!
+    GroupName: String
     GroupCoverImage: String
     Public_Id: String
-    Privacy: String!
+    Privacy: String
     GroupUsers: [User]
-    createdAt: String
-    updatedAt: String
+    createdAt: Date
+  }
+
+  type ChatsIngroup {
+    _id: MongoId!
+    Chat: String
+    ChatPlacement: Int!
+    From: User
+    To: groupData
+    createdAt: Date
+    public_id: String
+    PicturedMessage: String
   }
 
   #-------------------->Inputs<--------------------#
-  input chatData {
-    ChatId: ID!
-    Chat: ID
-    PublicId: String
-    To: String!
-    From: String!
-  }
 
   input chatFilter {
     friendId: ID!
@@ -83,5 +87,13 @@ export default gql`
     Users: [ID!]
     Privacy: String!
     Administrators: [ID!]
+  }
+
+  input dataFeed {
+    GroupId: ID!
+    Chat: ID
+    To: ID!
+    From: ID!
+    ChatPlacement: Int!
   }
 `;

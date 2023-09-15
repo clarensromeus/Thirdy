@@ -15,4 +15,7 @@ export class Friend {
 
   @prop({ ref: () => User, required: true })
   public User!: Ref<User>; // friend id reference who makes the request
+
+  @prop({ ref: () => User, required: false })
+  public Receiver?: Ref<User>;
 }

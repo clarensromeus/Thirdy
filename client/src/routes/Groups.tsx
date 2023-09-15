@@ -20,14 +20,52 @@ import RemoveRedEyeIcon from "@mui/icons-material/RemoveRedEye";
 import grey from "@mui/material/colors/grey";
 import PublicIcon from "@mui/icons-material/Public";
 import { useNavigate, NavigateFunction } from "react-router-dom";
-import { useQuery } from "@apollo/client";
-// internally crafted imports of ressources
+import dayjs from "dayjs";
+import localizedFormat from "dayjs/plugin/localizedFormat";
+import { isEqual } from "lodash";
+import { useRecoilValue } from "recoil";
+import { useQuery, useMutation } from "@apollo/client";
+// internally crafted imports of resources
 import Invitation from "../components/Invitation";
-import { GetAllGroupsQuery } from "../__generated__/graphql";
-import { GET_ALL_GROUPS } from "../graphql/Groups.graphql";
+import {
+  GetAllGroupsQuery,
+  JoinGroupMutation,
+  JoinGroupMutationVariables,
+  LeaveGroupMutation,
+  LeaveGroupMutationVariables,
+} from "../__generated__/graphql";
+import {
+  GET_ALL_GROUPS,
+  LEAVE_GROUPS,
+  JOIN_GROUPS,
+} from "../graphql/Groups.graphql";
+import uploadFile from "../components/Upload";
+import { IUpload } from "../typings/Profile";
+import Context from "../store/ContextApi";
+import { IAuthState } from "../typings/GlobalState";
+
+dayjs.extend(localizedFormat);
 
 const Groups = () => {
-  const [age, setAge] = React.useState("");
+  const [age, setAge] = React.useState<string>("");
+  const contextData = React.useContext(Context);
+
+  const AuthInfo = useRecoilValue<Partial<IAuthState>>(contextData.GetAuthInfo);
+
+  const [JoinGroup] = useMutation<
+    JoinGroupMutation,
+    JoinGroupMutationVariables
+  >(JOIN_GROUPS);
+
+  const [LeaveGroup] = useMutation<
+    LeaveGroupMutation,
+    LeaveGroupMutationVariables
+  >(LEAVE_GROUPS);
+
+  const [image, setImage] = React.useState<File | undefined>();
+
+  const [previewImage, setPreviewImage] = React.useState<string>("");
+  const [isValid, setValid] = React.useState<boolean>(false);
 
   const navigate: NavigateFunction = useNavigate();
 
@@ -35,6 +73,21 @@ const Groups = () => {
 
   const handleChange = (event: SelectChangeEvent) => {
     setAge(event.target.value as string);
+  };
+
+  const upload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const validity = e.target.validity;
+    const selectedFile = e.target.files as FileList;
+
+    if (validity && validity.valid) {
+      const FileData = uploadFile({
+        FileInfo: { file: selectedFile, valid: validity.valid },
+      }) satisfies IUpload;
+
+      setValid(Boolean(FileData?.valid));
+      setImage(FileData?.ImageInfo?.singleFile);
+      setPreviewImage(`${FileData?.ImageInfo?.previewImage}`);
+    }
   };
 
   return (
@@ -161,7 +214,12 @@ const Groups = () => {
                   zIndex: 2,
                 }}
               >
-                <input hidden type="file" id="change_profile" />
+                <input
+                  hidden
+                  type="file"
+                  id="change_profile"
+                  onChange={upload}
+                />
                 <label htmlFor="change_profile">
                   <Button
                     variant="contained"
@@ -197,7 +255,11 @@ const Groups = () => {
                       objectFit: "cover",
                     }}
                     alt="imageSample"
-                    src="https://cdn.memiah.co.uk/blog/wp-content/uploads/counselling-directory.org.uk/2019/04/shutterstock_1464234134-1024x684.jpg"
+                    src={
+                      isEqual(previewImage, "")
+                        ? "https://cdn.memiah.co.uk/blog/wp-content/uploads/counselling-directory.org.uk/2019/04/shutterstock_1464234134-1024x684.jpg"
+                        : previewImage
+                    }
                   />
                 </Box>
               </Box>
@@ -231,11 +293,12 @@ const Groups = () => {
           {/* list of groups */}
           <Box pt={2}>
             <Typography fontWeight="bold" fontSize="1.2rem">
-              Scour over all groups to follow ({data?.GetAllGroups?.length})
+              Scour over all groups to Join or Leave (
+              {data?.GetAllGroups?.length})
             </Typography>
           </Box>
           <Box
-            pt={2}
+            py={2}
             sx={{
               display: "flex",
               flexWrap: "wrap",
@@ -249,8 +312,19 @@ const Groups = () => {
             }}
           >
             {data?.GetAllGroups?.map((groups) => {
-              const { GroupName, GroupCoverImage, Privacy, createdAt, _id } =
-                groups;
+              const {
+                _id,
+                GroupName,
+                GroupCoverImage,
+                Privacy,
+                createdAt,
+                GroupUsers,
+              } = groups;
+              const date = dayjs(createdAt).format("MMMM D, YYYY");
+
+              const isUserIngroup: boolean | undefined = GroupUsers?.map(
+                (users) => users?._id
+              ).includes(`${AuthInfo.Data?._id}`);
 
               return (
                 <Box className="GroupBox">
@@ -274,7 +348,10 @@ const Groups = () => {
                     <Box sx={{ display: "flex", flexDirection: "column" }}>
                       <Typography fontWeight="bold">{GroupName}</Typography>
                       <Typography color="text.secondary">
-                        created on Feb 21, 2015
+                        created on {date}
+                      </Typography>
+                      <Typography color="text.secondary" fontSize="15px">
+                        members ({GroupUsers?.length})
                       </Typography>
                     </Box>
                   </Box>
@@ -296,16 +373,44 @@ const Groups = () => {
                         boxShadow: "none",
                         bgcolor: "#E8F0FE",
                         fontWeight: "bold",
+                        ":hover": {
+                          borderRadius: 0,
+                          boxShadow: "none",
+                          bgcolor: "#E8F0FE",
+                        },
+                      }}
+                      onClick={async () => {
+                        try {
+                          if (isUserIngroup) {
+                            await LeaveGroup({
+                              variables: {
+                                leaveGroupId: `${_id}`,
+                                Id: `${AuthInfo.Data?._id}`,
+                              },
+                              refetchQueries: [GET_ALL_GROUPS],
+                            });
+                          } else {
+                            await JoinGroup({
+                              variables: {
+                                groupId: `${_id}`,
+                                id: `${AuthInfo.Data?._id}`,
+                              },
+                              refetchQueries: [GET_ALL_GROUPS],
+                            });
+                          }
+                        } catch (error) {
+                          throw new Error(`${error}`);
+                        }
                       }}
                     >
                       <Typography fontWeight="bold" color="primary">
-                        Leave
+                        {isUserIngroup ? "Leave" : "Join"}
                       </Typography>
                     </Button>
                     <IconButton
                       onClick={(evt: React.MouseEvent) => {
                         evt.preventDefault();
-                        navigate(`${GroupName.trim()}-${_id}`);
+                        navigate(`${GroupName?.trim()}-${_id}`);
                       }}
                       sx={{ bgcolor: "#E8F0FE", borderRadius: 0 }}
                     >
