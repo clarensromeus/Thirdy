@@ -13,6 +13,7 @@ import GroupsIcon from "@mui/icons-material/Groups";
 import Icon from "@mui/material/Icon";
 import HomeIcon from "@mui/icons-material/Home";
 import PeopleIcon from "@mui/icons-material/People";
+import AddIcon from "@mui/icons-material/Add";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import { loadCSS } from "fg-loadcss";
 import {
@@ -23,13 +24,17 @@ import {
 } from "react-router-dom";
 import blue from "@mui/material/colors/blue";
 import isNil from "lodash/isNil";
+import isEqual from "lodash/isEqual";
+import grey from "@mui/material/colors/grey";
 import isUndefined from "lodash/isUndefined";
 import { useRecoilValue } from "recoil";
-// externally crafted imports of ressources
+// internally crafted imports of resources
 import { StyledBadge } from "./MuiStyles";
 import { IDrawer } from "../typings/Home";
 import Context from "../store/ContextApi";
 import { IAuthState } from "../typings/GlobalState";
+import modeContext from "../store/ModeContext";
+import { IMode } from "../typings/GlobalState";
 
 const AppDrawer = () => {
   const drawerWidth: number = 300;
@@ -39,14 +44,16 @@ const AppDrawer = () => {
   const navigate: NavigateFunction = useNavigate();
 
   const ContextData = React.useContext(Context);
+  const modeContextData = React.useContext(modeContext);
 
   const AuthInfo = useRecoilValue<Partial<IAuthState>>(ContextData.GetAuthInfo);
+  const mode = useRecoilValue<IMode>(modeContextData.GetMode);
 
   const DrawerInfo: IDrawer<string>[] = [
     {
-      Text: "Dashboard",
+      Text: "Thirdy",
       DrawerIcon: HomeIcon,
-      Path: "dashboard",
+      Path: "thirdy",
     },
     {
       Text: "Friends",
@@ -67,6 +74,11 @@ const AppDrawer = () => {
       Text: "Groups",
       DrawerIcon: GroupsIcon,
       Path: "groups",
+    },
+    {
+      Text: "New status",
+      DrawerIcon: AddIcon,
+      Path: "status",
     },
   ];
 
@@ -126,7 +138,11 @@ const AppDrawer = () => {
             <Typography
               fontFamily="Times New Roman, serif"
               variant="body2"
-              sx={{ color: "black", fontWeight: "bold" }}
+              sx={{
+                color: isEqual(mode.mode, "light") ? "black" : "white",
+                fontWeight: "bold",
+                textTransform: "capitalize",
+              }}
             >
               {AuthInfo.Data?.Firstname} {AuthInfo.Data?.Lastname}
             </Typography>
@@ -141,16 +157,25 @@ const AppDrawer = () => {
               const { Path, DrawerIcon } = info;
 
               const isMatch: boolean = !isNil(third) && third === Path;
+            
               return (
                 <ListItem
                   key={info.Text}
                   disablePadding
                   sx={{
-                    bgcolor: isMatch
-                      ? "#E8F0FE"
-                      : isUndefined(third) && second === Path
-                      ? "#E8F0FE"
-                      : null,
+                    bgcolor:
+                      isMatch && isEqual(mode.mode, "light")
+                        ? "#E8F0FE"
+                        : (isMatch && isEqual(mode.mode, "dark")) ||
+                          (isUndefined(third) &&
+                            second === Path &&
+                            isEqual(mode.mode, "dark"))
+                        ? "rgba(255,255, 255, 0.2)"
+                        : isUndefined(third) &&
+                          second === Path &&
+                          isEqual(mode.mode, "light")
+                        ? "#E8F0FE"
+                        : null,
                   }}
                 >
                   <ListItemButton
@@ -162,11 +187,36 @@ const AppDrawer = () => {
                       <Box
                         sx={{
                           p: 1,
-                          bgcolor: isMatch
-                            ? blue[600]
-                            : isUndefined(third) && second === Path
-                            ? blue[600]
-                            : "#E8F0FE",
+                          bgcolor:
+                            isMatch && isEqual(mode.mode, "light")
+                              ? blue[600]
+                              : !isMatch &&
+                                isEqual(mode.mode, "light") &&
+                                second !== Path
+                              ? "#E8F0FE"
+                              : !isMatch &&
+                                isUndefined(third) &&
+                                second === Path &&
+                                isEqual(mode.mode, "light")
+                              ? blue[600]
+                              : !isMatch &&
+                                !isUndefined(third) &&
+                                second === Path &&
+                                isEqual(mode.mode, "light")
+                              ? "#E8F0FE"
+                              : "",
+                          backgroundImage:
+                            isMatch && isEqual(mode.mode, "light")
+                              ? blue[600]
+                              : isMatch && isEqual(mode.mode, "dark")
+                              ? "linear-gradient(black, white)"
+                              : !isMatch && isEqual(mode.mode, "dark")
+                              ? "linear-gradient(black, white)"
+                              : isUndefined(third) &&
+                                second === Path &&
+                                isEqual(mode.mode, "dark")
+                              ? "linear-gradient(black, white)"
+                              : "linear-gradient(blue)",
                           borderRadius: 50,
                           display: "flex",
                           justifyContent: "center",
@@ -176,11 +226,22 @@ const AppDrawer = () => {
                         {Path === "chat" ? (
                           <Icon
                             sx={{
-                              color: isMatch
-                                ? "white"
-                                : isUndefined(third) && second === Path
-                                ? "white"
-                                : "black",
+                              color:
+                                isMatch && isEqual(mode.mode, "light")
+                                  ? "white"
+                                  : isMatch && isEqual(mode.mode, "dark")
+                                  ? grey[100]
+                                  : !isMatch && isEqual(mode.mode, "dark")
+                                  ? "white"
+                                  : isUndefined(third) &&
+                                    second === Path &&
+                                    isEqual(mode.mode, "light")
+                                  ? "white"
+                                  : isUndefined(third) &&
+                                    second === Path &&
+                                    isEqual(mode.mode, "dark")
+                                  ? grey[100]
+                                  : "black",
                             }}
                             baseClassName="fas"
                             className="fa-solid fa-comment"
@@ -189,11 +250,22 @@ const AppDrawer = () => {
                         ) : (
                           <DrawerIcon
                             sx={{
-                              color: isMatch
-                                ? "white"
-                                : isUndefined(third) && second === Path
-                                ? "white"
-                                : "black",
+                              color:
+                                isMatch && isEqual(mode.mode, "light")
+                                  ? "white"
+                                  : isMatch && isEqual(mode.mode, "dark")
+                                  ? grey[100]
+                                  : isUndefined(third) &&
+                                    second === Path &&
+                                    isEqual(mode.mode, "light")
+                                  ? "white"
+                                  : !isMatch && isEqual(mode.mode, "dark")
+                                  ? "white"
+                                  : isUndefined(third) &&
+                                    second === Path &&
+                                    isEqual(mode.mode, "dark")
+                                  ? grey[100]
+                                  : "black",
                             }}
                           />
                         )}
@@ -201,7 +273,9 @@ const AppDrawer = () => {
                     </ListItemIcon>
                     <ListItemText
                       sx={{
-                        color: "black",
+                        color: isEqual(mode.mode, "light")
+                          ? "black"
+                          : grey[100],
                       }}
                       primary={
                         <Typography fontWeight="570" fontSize="16px">

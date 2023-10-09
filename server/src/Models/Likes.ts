@@ -4,10 +4,10 @@ import { User } from "./User.ts";
 // parse the collection name and timestamp to generate createdAt and updateAt field in the db
 @modelOptions({ schemaOptions: { collection: "likes", timestamps: true } })
 export class Like {
-  @prop({ type: () => String, required: true, trim: true })
+  @prop({ type: () => String, required: true, unique: false })
   public PostId!: string;
 
-  @prop({ type: () => String, required: true, trim: true })
+  @prop({ type: () => String, required: true })
   public Preference!: string;
 
   @prop({ ref: () => User, required: false })

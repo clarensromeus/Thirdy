@@ -58,3 +58,10 @@ mutation Create_Post($postData: postEntries, $picture: Upload!) {
     success
   }
 }
+
+mutation EditPost($editData: editPost!) {
+  EditPost(editData: $editData) {
+    message
+    success
+  }
+}

@@ -1,11 +1,12 @@
-import * as z from "zod";
 import pkg from "lodash";
 import { GraphQLError } from "graphql";
 import { dirname } from "path";
 import { fileURLToPath } from "url";
 import GraphQLUpload from "graphql-upload/GraphQLUpload.mjs";
-// externally crafted imports of ressources
-import { IUserContext, IUser } from "../../typings/Con_Register.ts";
+import nodemailer from "nodemailer";
+import { PubSub } from "graphql-subscriptions";
+// internally crafted imports of resources
+import { IUser } from "../../typings/Con_Register.ts";
 import GenerateToken from "../../Utils/GenerateToken.ts";
 import RegisterSchema from "../../Validators/Registeration.ts";
 import UploadFile from "../../Service/ImageUpload.ts";
@@ -14,14 +15,17 @@ import {
   LoginSchemaWithUsername,
 } from "../../Validators/Login.ts";
 import { hashPassCode, Compare_hash } from "../../Utils/hash_Passcode.ts";
-import { REDIS_CLIENT } from "../../Constants/Redis.ts";
 import { ACCESS_TOKEN, REFRESH_TOKEN } from "../../Config/index.ts";
 import { Resolvers } from "../../__generate__/types.ts";
 import { serializeUser } from "../../Service/User.ts";
 import { ImageType } from "../../typings/upload.ts";
-import { userModel } from "../../Models/index.ts";
+import { friendModel, postModel, userModel } from "../../Models/index.ts";
+import { REDIS_CLIENT } from "../../Constants/Redis.ts";
+import { EMAIL_PASS, EMAIL_USER } from "../../Config/index.ts";
 
 const { isNil, isUndefined, nth, isError } = pkg;
+
+const pubSub = new PubSub();
 
 const __filename: string = fileURLToPath(import.meta.url);
 const __dirname: string = dirname(__filename);
@@ -57,27 +61,50 @@ const UserResolver: Resolvers = {
         });
       }
     },
-    allUsers: async (__, {}) => {
+    userStatics: async (__, { userID }) => {
+      try {
+        // grab all friends following the online user
+        const user = await userModel
+          .findOne({ _id: userID })
+          .populate("Friends")
+          .select("Friends");
+
+        // grab all friends whose online user is followed
+        const friends = await friendModel
+          .find()
+          .where({ RequestId: userID, AcceptedId: { $ne: undefined || null } });
+
+        // grab all posts made by the online user
+        const posts = await postModel
+          .find()
+          .where({ User: userID })
+          .select("User")
+          .populate({ path: "User", select: "_id" });
+
+        return {
+          follower: user?.Friends?.length,
+          following: friends.length,
+          posts: posts.length,
+        };
+      } catch (error) {
+        throw new Error(`${error}`);
+      }
+    },
+    allUsers: async (__, { _id }) => {
       try {
         const users = await userModel
-          .find({ _id: { $ne: "64d7b561eda1c02a4950abb0" } })
+          .find({ _id: { $ne: `${_id}` } })
           .populate({
             path: "Friends",
             populate: ["User", "Receiver"],
           });
-
-        const users2 = await userModel
-          .findById({
-            _id: "64fde80479a37b706df8d546",
-          })
-          .populate({ path: "Friends" });
 
         return users;
       } catch (error) {
         throw new Error(`${error}`);
       }
     },
-    Connection: async (_: any, args) => {
+    Connection: async (_, args) => {
       try {
         const { Username, Password, Email } = await args.connectionInfo;
 
@@ -122,7 +149,7 @@ const UserResolver: Resolvers = {
               },
               `${REFRESH_TOKEN}`
             );
-            // store refreshtoken in Redis Server after successfully connected
+            // store refresh token in Redis Server after successfully connected
             await REDIS_CLIENT.SETEX(
               "REFRESH_TOKEN",
               60 * 60 * 24 * 2, // expires in two months
@@ -275,9 +302,9 @@ const UserResolver: Resolvers = {
         });
       }
     },
-    ChangeProfile: async (__, { file, _id }) => {
+    ChangeUserProfile: async (__, { file, _id }) => {
       try {
-        const { secureUrl, success, serverUrl, public_id }: ImageType<string> =
+        const { secureUrl, success, public_id }: ImageType<string> =
           await UploadFile(file, true, __dirname, "Thirdy_social");
         // update user model with cloudinary secure image and public_id
         await userModel
@@ -297,8 +324,12 @@ const UserResolver: Resolvers = {
     },
     ChangeCover: async (__, { file, _id }) => {
       try {
-        const { secureUrl, success, serverUrl, public_id }: ImageType<string> =
-          await UploadFile(file, true, __dirname, "Thirdy_social");
+        const { secureUrl, public_id }: ImageType<string> = await UploadFile(
+          file,
+          true,
+          __dirname,
+          "Thirdy_social"
+        );
 
         // update user model with cloudinary secure image and public_id
         await userModel
@@ -312,6 +343,101 @@ const UserResolver: Resolvers = {
 
         return {
           message: "cover image successfully uploaded",
+          success: true,
+        };
+      } catch (error) {
+        throw new Error(`${error}`);
+      }
+    },
+    OnlineOfflineStatus: async (__, { userId, online }) => {
+      try {
+        const isOnline = await userModel
+          .findOneAndUpdate({ IsOnline: Boolean(online) })
+          .where({ _id: userId });
+
+        if (!isOnline) {
+          return {
+            message: "user is offline",
+            success: true,
+          };
+        }
+
+        return {
+          message: "user is online",
+          success: true,
+        };
+      } catch (error) {
+        throw new Error(`${error}`);
+      }
+    },
+    SendMail: async (
+      __,
+      { mail: { HTMLBODY, DESTINATION, SUBJECT, MESSAGE }, code }
+    ) => {
+      try {
+        // Testing mail
+        let testAccount = await nodemailer.createTestAccount();
+        //etheral SMTP
+        let Transporter = nodemailer.createTransport({
+          host: "smtp.ethereal.email",
+          port: 587,
+          secure: false, // true for 465, false for other ports
+          auth: {
+            user: testAccount.user, // generated ethereal user
+            pass: testAccount.pass, // generated ethereal password
+          },
+        });
+
+        //  sending real mail using gmail account account
+        let transporter = await nodemailer.createTransport({
+          service: "gmail",
+          auth: {
+            user: `${EMAIL_USER}`, // real gmail user's full name
+            pass: `${EMAIL_PASS}`, // real gmail user's password
+          },
+        });
+        // sending the mail
+        await transporter.sendMail({
+          from: { name: "TechAdmin", address: `${EMAIL_USER}` },
+          to: `${DESTINATION}`,
+          subject: `${SUBJECT}`,
+          text: `${MESSAGE}`,
+          html: `${HTMLBODY}`,
+        });
+
+        return {
+          message: code,
+          success: true,
+        };
+      } catch (error) {
+        throw new Error(`${error}`);
+      }
+    },
+    ChangePassword: async (__, { userEmail, newPassword }) => {
+      try {
+        // hashing the new password coming from the client
+        const passHashing = await hashPassCode({ passCode: newPassword });
+        // pass the hashing to the related user for the password change
+        await userModel
+          .findOneAndUpdate({ Password: passHashing })
+          .where({ Email: userEmail });
+
+        return {
+          message: "password successfully changed",
+          success: true,
+        };
+      } catch (error) {
+        throw new Error(`${error}`);
+      }
+    },
+    LogOut: async () => {
+      try {
+        // when user is logged out delete all possible user data caches like token etc..
+        // so that user cache data can be new on the server when user logged in back
+        await REDIS_CLIENT.DEL(["USER_AUTH", "REFRESH_TOKEN"]);
+
+        return {
+          message: "successfully logged out",
           success: true,
         };
       } catch (error) {

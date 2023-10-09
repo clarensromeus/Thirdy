@@ -9,6 +9,7 @@ export default gql`
   extend type Query {
     GetChatFriends(userId: String!): [listOfFriends!]
     Chat(chatUserInfo: chatUserInfo!): [chatResponse]
+    UserFriendChat(userId: ID!): [friendChat]
   }
   #------------------->Mutation<-----------------#
   extend type Mutation {
@@ -49,6 +50,14 @@ export default gql`
     PicturedMessage: String
     To: User
     From: User
+    createdAt: Date
+  }
+
+  type friendChat {
+    _id: MongoId!
+    From: User
+    PicturedMessage: String
+    Chat: String
     createdAt: Date
   }
 

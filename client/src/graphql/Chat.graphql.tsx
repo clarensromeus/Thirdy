@@ -24,6 +24,20 @@ const USER_CHATS = gql`
   }
 `;
 
+const USER_FRIENDS_CHAT = gql`
+  query UserFriendChat($userFriendChatUserId: ID!) {
+    UserFriendChat(userId: $userFriendChatUserId) {
+      _id
+      From {
+        _id
+      }
+      Chat
+      PicturedMessage
+      createdAt
+    }
+  }
+`;
+
 const INSTANT_USER_CHATS = gql`
   subscription InstantUserChats {
     Chat {
@@ -49,12 +63,15 @@ const INSTANT_USER_CHATS = gql`
 `;
 
 const CHAT_WITH_FRIENDS = gql`
-  mutation ChatWithFriends($chatInfo: chatInfo!) {
-    ChatWithFriends(chatInfo: $chatInfo) {
+  mutation ChatWithFriends(
+    $chatInfo: chatInfo!
+    $chatWithFriendsPicture: Upload
+  ) {
+    ChatWithFriends(chatInfo: $chatInfo, picture: $chatWithFriendsPicture) {
       message
       success
     }
   }
 `;
 
-export { USER_CHATS, INSTANT_USER_CHATS, CHAT_WITH_FRIENDS };
+export { USER_CHATS, INSTANT_USER_CHATS, CHAT_WITH_FRIENDS, USER_FRIENDS_CHAT };

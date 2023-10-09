@@ -1,0 +1,24 @@
+#------------------>Queries<-----------------#
+
+#----------------->Mutations<----------------#
+mutation AddStatus(
+  $addStatusId: ID!
+  $addStatusPicture: Upload!
+  $addStatusUserId: ID!
+) {
+  AddStatus(
+    _id: $addStatusId
+    picture: $addStatusPicture
+    userId: $addStatusUserId
+  ) {
+    message
+    success
+  }
+}
+
+mutation DELETE_STATUS($statusId: ID!, $deleteStatusUserId2: ID!) {
+  DeleteStatus(StatusId: $statusId, userId: $deleteStatusUserId2) {
+    message
+    success
+  }
+}

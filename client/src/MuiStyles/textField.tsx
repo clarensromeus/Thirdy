@@ -20,9 +20,9 @@ const CssTextField = styled(InputBase)(({ theme }) => ({
 const TextFieldWrapper = styled("div")(({ theme }) => ({
   position: "relative",
   borderRadius: 40,
-  backgroundColor: "#E8F0FE",
+  // backgroundColor: "",
   "&:hover": {
-    backgroundColor: "#E8F0FE",
+    // backgroundColor: "#E8F0FE",
   },
   marginRight: theme.spacing(2),
   marginLeft: 0,
@@ -35,7 +35,7 @@ const TextFieldWrapper = styled("div")(({ theme }) => ({
 
 const CssTextFieldShare = styled(TextField)({
   "& .MuiOutlinedInput-root": {
-    backgroundColor: "#E8F0FE",
+    // backgroundColor: "#E8F0FE",
     borderRadius: 50,
     border: "none",
     "&.Mui-focused fieldset": {

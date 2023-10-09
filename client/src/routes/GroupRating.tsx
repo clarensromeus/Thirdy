@@ -2,6 +2,9 @@ import * as React from "react";
 import { Box, Divider, Typography } from "@mui/material";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@apollo/client";
+import { useRecoilValue } from "recoil";
+import { isEqual } from "lodash";
+import grey from "@mui/material/colors/grey";
 // internally crafted imports of resources
 import {
   GroupInfoQuery,
@@ -9,10 +12,15 @@ import {
 } from "../__generated__/graphql";
 import { GROUP_INFO } from "../graphql/Groups.graphql";
 import handshake from "../Images/static/handshake.png";
-import GroupTabs from "../components/GroupTabs";
+import GroupTabs from "../components/Group/GroupTabs";
+import modeContext from "../store/ModeContext";
+import { IMode } from "../typings/GlobalState";
 
 const GroupRating = () => {
   let { groupname } = useParams<{ groupname: string }>();
+  const modeContextData = React.useContext(modeContext);
+
+  const mode = useRecoilValue<IMode>(modeContextData.GetMode);
 
   const { data } = useQuery<GroupInfoQuery, GroupInfoQueryVariables>(
     GROUP_INFO,
@@ -62,7 +70,7 @@ const GroupRating = () => {
                 mr: "auto",
                 ml: "auto",
                 width: 300,
-                bgcolor: "white",
+                bgcolor: isEqual(mode.mode, "") ? "white" : "dark",
               }}
             >
               <img
@@ -73,9 +81,17 @@ const GroupRating = () => {
             </Box>
           </Box>
         </Box>
-        <Box pt={3} px={3} sx={{ bgcolor: "white" }}>
+        <Box
+          pt={3}
+          px={3}
+          sx={{ bgcolor: isEqual(mode.mode, "light") ? "white" : "dark" }}
+        >
           <Box pb={2}>
-            <Typography fontWeight="600" fontSize="25px">
+            <Typography
+              fontWeight="600"
+              fontSize="25px"
+              color={isEqual(mode.mode, "light") ? "black" : grey[100]}
+            >
               {groupname?.split("-")[0]}
             </Typography>
           </Box>

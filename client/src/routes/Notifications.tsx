@@ -12,11 +12,37 @@ import {
 import EditNotificationsIcon from "@mui/icons-material/EditNotifications";
 import blue from "@mui/material/colors/blue";
 import { isEqual } from "lodash";
+import grey from "@mui/material/colors/grey";
+import { useRecoilValue } from "recoil";
 import SearchIcon from "@mui/icons-material/Search";
-// internally crafted imports of ressources
+import { useReactiveVar } from "@apollo/client";
+// internally crafted imports of resources
 import { CssTextFieldShare } from "../MuiStyles/textField";
+import useNotification from "../hooks/useNotifications";
+import modeContext from "../store/ModeContext";
+import { IAuthState } from "../typings/GlobalState";
+import Context from "../store/ContextApi";
+import { IMode } from "../typings/GlobalState";
+import { AllNotifications } from "../Global/GlobalNotifications";
 
 const Notifications = () => {
+  // global app user state
+  const contextData = React.useContext(Context);
+  const AuthInfo = useRecoilValue<Partial<IAuthState>>(contextData.GetAuthInfo);
+
+  // global app mode
+  const modeContextData = React.useContext(modeContext);
+  const mode = useRecoilValue<IMode>(modeContextData.GetMode);
+
+  const Notifications = useReactiveVar(AllNotifications);
+
+  const allNotifications = Notifications.Notifications.filter(
+    (notifications) => notifications.ReceiverId === `${AuthInfo.Data?._id}`
+  );
+
+  // notification handlers
+  const { DeleteNotification } = useNotification(`${AuthInfo.Data?._id}`);
+
   const fakeNotifications: {
     Firstname: string;
     Lastname: string;
@@ -98,21 +124,43 @@ const Notifications = () => {
                 <Typography fontWeight="700" fontSize="24px">
                   Notifications
                 </Typography>
-                <IconButton sx={{ bgcolor: "#E8F0FE", borderRadius: 50 }}>
-                  <EditNotificationsIcon sx={{ color: "black" }} />
+                <IconButton
+                  sx={{
+                    bgcolor: isEqual(mode.mode, "light") ? "#E8F0FE" : "black",
+                    borderRadius: 50,
+                  }}
+                >
+                  <EditNotificationsIcon
+                    sx={{
+                      color: isEqual(mode.mode, "light") ? "black" : "white",
+                    }}
+                  />
                 </IconButton>
               </Box>
               <Box
                 px={2}
                 sx={{ display: "flex", flexDirection: "column", gap: 0.4 }}
               >
-                <Typography sx={{ color: blue[800] }}>(19)</Typography>
+                <Typography sx={{ color: blue[800] }}>
+                  ({allNotifications.length})
+                </Typography>
                 <Box>
                   <CssTextFieldShare
                     placeholder="search..."
                     size="small"
                     fullWidth
-                    sx={{ "& fieldset": { border: "none" } }}
+                    sx={{
+                      "& fieldset": { border: "none" },
+                      ".MuiOutlinedInput-root": {
+                        bgcolor: isEqual(mode.mode, "light")
+                          ? "#E8F0FE"
+                          : "rgba(255,255, 255, 0.1)",
+                        borderRadius: 50,
+                        color: isEqual(mode.mode, "light")
+                          ? grey[700]
+                          : grey[200],
+                      },
+                    }}
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
@@ -189,11 +237,13 @@ const Notifications = () => {
                               ? "commented your post"
                               : isEqual(Notiref, "messaged")
                               ? "was messaged you"
-                              : "sent you a friend request"}
+                              : "sent you a friend request"}{" "}
                             {isEqual(Notiref, "shared") && (
                               <span
                                 style={{
-                                  color: "black",
+                                  color: isEqual(mode.mode, "light")
+                                    ? "black"
+                                    : "white",
                                   fontWeight: "600",
                                   fontSize: "15px",
                                 }}
@@ -207,7 +257,7 @@ const Notifications = () => {
                           <Typography
                             sx={{
                               color: blue[700],
-                              fontSize: "14px",
+                              fontSize: "13px",
                               fontWeight: "600",
                             }}
                           >
@@ -241,7 +291,15 @@ const Notifications = () => {
                             <Box>
                               <Button
                                 variant="contained"
-                                sx={{ fontWeight: "bold", boxShadow: "none" }}
+                                sx={{
+                                  fontWeight: "bold",
+                                  boxShadow: "none",
+                                  bgcolor: isEqual(mode.mode, "light")
+                                    ? "primary"
+                                    : "#0866ff",
+                                  color: "white",
+                                  textTransform: "capitalize",
+                                }}
                                 fullWidth
                               >
                                 Accept
@@ -250,10 +308,23 @@ const Notifications = () => {
                             <Box>
                               <Button
                                 variant="contained"
-                                sx={{ bgcolor: "#E8F0FE", boxShadow: "none" }}
+                                sx={{
+                                  bgcolor: isEqual(mode.mode, "light")
+                                    ? "#E8F0FE"
+                                    : "rgba(255, 255, 255, 0.1)",
+                                  boxShadow: "none",
+                                  textTransform: "capitalize",
+                                }}
                                 fullWidth
                               >
-                                <Typography fontWeight="bold" color="primary">
+                                <Typography
+                                  fontWeight="bold"
+                                  color={
+                                    isEqual(mode.mode, "light")
+                                      ? "primary"
+                                      : "white"
+                                  }
+                                >
                                   Reject
                                 </Typography>
                               </Button>

@@ -4,27 +4,36 @@ import CloseIcon from "@mui/icons-material/Close";
 import IconButton from "@mui/material/IconButton";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { useMutation } from "@apollo/client";
+import isEqual from "lodash/isEqual";
+import grey from "@mui/material/colors/grey";
+import { useRecoilValue } from "recoil";
 import { ClipLoader } from "react-spinners";
-// internally crafted imports of ressources
+// internally crafted imports of resources
 import {
   Change_User_ProfileMutation,
   Change_User_ProfileMutationVariables,
 } from "../__generated__/graphql";
 import { IFrame } from "../typings/Profile";
-import { Change_Profile } from "../graphql/User.graphql";
+import { CHANGE_USER_PROFILE } from "../graphql/User.graphql";
 import uploadFile from "./Upload";
 import { IUpload } from "../typings/Profile";
+import modeContext from "../store/ModeContext";
+import { IMode } from "../typings/GlobalState";
 
-const UploadFrame = ({ openFrame, setOpenFrame, Image }: IFrame) => {
+const UploadFrame = ({ openFrame, setOpenFrame, Image, userId }: IFrame) => {
+  const modeContextData = React.useContext(modeContext);
+
   const [image, setImage] = React.useState<File | undefined>();
 
   const [previewImage, setPreviewImage] = React.useState<string>("");
   const [isValid, setValid] = React.useState<boolean>(false);
 
+  const mode = useRecoilValue<IMode>(modeContextData.GetMode);
+
   const [ChangeProfile, { loading }] = useMutation<
     Change_User_ProfileMutation,
     Change_User_ProfileMutationVariables
-  >(Change_Profile);
+  >(CHANGE_USER_PROFILE);
 
   const upload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const validity = e.target.validity;
@@ -60,8 +69,11 @@ const UploadFrame = ({ openFrame, setOpenFrame, Image }: IFrame) => {
             position: "relative",
             top: "50%",
             left: "50%",
+            border: isEqual(mode.mode, "light")
+              ? "light"
+              : `1px solid ${grey[900]}`,
             transform: "translate(-50%, -50%)",
-            bgcolor: "white",
+            bgcolor: isEqual(mode.mode, "light") ? "white" : "black",
             width: 550,
             height: 440,
           }}
@@ -79,7 +91,13 @@ const UploadFrame = ({ openFrame, setOpenFrame, Image }: IFrame) => {
               <label htmlFor="change_profile">
                 <Button
                   variant="contained"
-                  sx={{ borderRadius: 50 }}
+                  sx={{
+                    borderRadius: 50,
+                    bgcolor: isEqual(mode.mode, "light")
+                      ? "primary"
+                      : "#0866ff",
+                    color: "white",
+                  }}
                   startIcon={<CloudUploadIcon />}
                   component="span"
                 >
@@ -88,7 +106,11 @@ const UploadFrame = ({ openFrame, setOpenFrame, Image }: IFrame) => {
               </label>
             </Box>
             <Box>
-              <Typography fontWeight="bold" fontSize="1.7rem">
+              <Typography
+                fontWeight="bold"
+                fontSize="1.7rem"
+                sx={{ color: "white" }}
+              >
                 Upload your picture
               </Typography>
             </Box>
@@ -109,7 +131,7 @@ const UploadFrame = ({ openFrame, setOpenFrame, Image }: IFrame) => {
               justifyContent: "center",
               flexDirection: "column",
               alignItems: "center",
-              gap: 2,
+              gap: 1.8,
               width: "inherit",
             }}
           >
@@ -129,8 +151,8 @@ const UploadFrame = ({ openFrame, setOpenFrame, Image }: IFrame) => {
                     if (!isValid) return;
                     await ChangeProfile({
                       variables: {
-                        file: image,
-                        id: "123493493493493",
+                        changeUserProfileFile: image,
+                        changeUserProfileId: `${userId}`,
                       },
                       onCompleted: () => {
                         // close the frame upload is success
@@ -143,8 +165,15 @@ const UploadFrame = ({ openFrame, setOpenFrame, Image }: IFrame) => {
                 }}
                 sx={{
                   borderRadius: 20,
-                  bgcolor: "black",
-                  ":hover": { bgcolor: "black" },
+                  color: "white",
+                  bgcolor: isEqual(mode.mode, "light")
+                    ? "black"
+                    : "rgba(255, 255, 255, 0.2)",
+                  ":hover": {
+                    bgcolor: isEqual(mode.mode, "light")
+                      ? "black"
+                      : "rgba(255, 255, 255, 0.2)",
+                  },
                 }}
               >
                 {loading ? (

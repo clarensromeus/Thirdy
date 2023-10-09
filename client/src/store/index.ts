@@ -1,3 +1,3 @@
-import { AuthState } from './Data';
+import { AuthState, AppMode } from "./Data";
 
-export { AuthState };
+export { AuthState, AppMode };

@@ -9,13 +9,16 @@ import {
   IconButton,
   Divider,
 } from "@mui/material";
-import { upperFirst } from "lodash";
+import { upperFirst, isEqual, filter, property, map } from "lodash";
 import grey from "@mui/material/colors/grey";
+import lightBlue from "@mui/material/colors/lightBlue";
 import blue from "@mui/material/colors/blue";
 import { useMutation, useQuery } from "@apollo/client";
 import { ClipLoader, CircleLoader } from "react-spinners";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
+import { useReactiveVar } from "@apollo/client";
 import { useRecoilValue } from "recoil";
+// internally crafted imports of resources
 import {
   ALL_FRIEND_REQUESTS,
   FRIEND_SUGGESTIONS,
@@ -43,11 +46,25 @@ import {
 } from "../__generated__/graphql";
 import { IAuthState } from "../typings/GlobalState";
 import Context from "../store/ContextApi";
+import modeContext from "../store/ModeContext";
+import { IMode } from "../typings/GlobalState";
+import useNotification from "../hooks/useNotifications";
+import { IFriend } from "../typings/Friends";
+import { Authentication } from "../Global/GlobalAuth";
+import { NotiReference } from "../Enums";
 
 const Friends = () => {
   const contextData = React.useContext(Context);
+  const modeContextData = React.useContext(modeContext);
 
   const AuthInfo = useRecoilValue<Partial<IAuthState>>(contextData.GetAuthInfo);
+  const mode = useRecoilValue<IMode>(modeContextData.GetMode);
+
+  const { CreateNotification, PushNotification } = useNotification(
+    `${AuthInfo.Data?._id}`
+  );
+
+  const isAuth = useReactiveVar(Authentication);
 
   const { data: allFriends, loading: allFriendsLoading } = useQuery<
     AllFriendsRequestsQuery,
@@ -93,12 +110,35 @@ const Friends = () => {
   const [unfollowDiff, setUnfollowDiff] = React.useState<string>("");
   const [followDiff, setFollowDiff] = React.useState<string>("");
 
+  // get friends info in case the active user sent the friend request
+  const sentFriends = filter(userFriends?.AllFriends, function (friends) {
+    return friends.RequestId === `${AuthInfo.Data?._id}`;
+  });
+
+  // get user info in case the active acceptedId the friend request
+  const receivedFriends = filter(userFriends?.AllFriends, function (friends) {
+    return friends.AcceptedId === `${AuthInfo.Data?._id}`;
+  });
+
+  // merge sent and received friend requests
+  const AllFriends = [
+    ...map(receivedFriends, property("User")),
+    ...map(sentFriends, property("Receiver")),
+  ] as IFriend<string>[];
+
+  // push real time notifications
+  PushNotification({ isAuth: Boolean(isAuth.isLoggedIn) });
+
   return (
     <>
       <Container>
         <Box sx={{ pt: 2 }}>
           <Box>
-            <Typography fontWeight="bold" fontSize="1.3rem">
+            <Typography
+              fontWeight="bold"
+              fontSize="1.3rem"
+              sx={{ color: isEqual(mode.mode, "light") ? "black" : "white" }}
+            >
               Friend Requests ({allFriends?.allFriendRequests?.length})
             </Typography>
           </Box>
@@ -129,7 +169,12 @@ const Friends = () => {
                       width: 200,
                       borderRadius: 3,
                       overflow: "hidden",
-                      border: `1px solid ${grey[200]}`,
+                      bgcolor: isEqual(mode.mode, "light")
+                        ? "white"
+                        : "rgba(255, 255, 255, 0.1)",
+                      border: isEqual(mode.mode, "light")
+                        ? `1px solid ${grey[200]}`
+                        : "rgba(255, 255, 255, 0.1)",
                       m: 0,
                       p: 0,
                     }}
@@ -145,7 +190,9 @@ const Friends = () => {
                       pt={1.2}
                       px={1.1}
                       sx={{
-                        bgcolor: "white",
+                        bgcolor: isEqual(mode.mode, "light")
+                          ? "white"
+                          : "rgba(255, 255, 255, 0.1)",
                         display: "flex",
                         gap: 0.1,
                         flexDirection: "column",
@@ -155,6 +202,11 @@ const Friends = () => {
                         component="span"
                         fontWeight="bold"
                         fontSize="17px"
+                        sx={{
+                          color: isEqual(mode.mode, "light")
+                            ? "black"
+                            : "white",
+                        }}
                       >
                         {upperFirst(`${friends.User?.Firstname}`)}{" "}
                         {friends.User?.Lastname}
@@ -184,7 +236,13 @@ const Friends = () => {
                       </Box>
                       <Button
                         variant="contained"
-                        sx={{ fontWeight: "bold", boxShadow: "none" }}
+                        sx={{
+                          fontWeight: "bold",
+                          boxShadow: "none",
+                          bgcolor: isEqual(mode.mode, "dark")
+                            ? lightBlue[500]
+                            : "",
+                        }}
                         fullWidth
                         onClick={() => {
                           followBack({
@@ -194,6 +252,24 @@ const Friends = () => {
                               AcceptedId: `${AuthInfo.Data?._id}`,
                             },
                             refetchQueries: [ALL_FRIENDS, ALL_FRIEND_REQUESTS],
+                            onCompleted: async () => {
+                              try {
+                                await CreateNotification({
+                                  ReceiverId: `${friends.User?._id}`,
+                                  SenderInfo: `${AuthInfo.Data?._id}`,
+                                  isGroup: Boolean(false),
+                                  isSeen: Boolean(false),
+                                  NotiEngine: {
+                                    GroupName: "",
+                                    NotiImage: "",
+                                    NotiText: "accepted your request",
+                                  },
+                                  NotiReference: NotiReference.Accepted,
+                                });
+                              } catch (error) {
+                                throw new Error(`${error}`);
+                              }
+                            },
                           });
                           setFollowBackDiff(`${friends._id}`);
                         }}
@@ -214,11 +290,18 @@ const Friends = () => {
                         <Button
                           variant="contained"
                           sx={{
-                            bgcolor: "#E8F0FE",
+                            bgcolor: isEqual(mode.mode, "light")
+                              ? "#E8F0FE"
+                              : "rgba(255, 255, 255, 0.1)",
                             boxShadow: "none",
                             ":hover": {
-                              bgcolor: "#E8F0FE",
+                              bgcolor: isEqual(mode.mode, "light")
+                                ? "#E8F0FE"
+                                : "rgba(255, 255, 255, 0.1)",
                               boxShadow: "none",
+                              color: isEqual(mode.mode, "light")
+                                ? "primary"
+                                : "white",
                             },
                           }}
                           fullWidth
@@ -231,10 +314,33 @@ const Friends = () => {
                                 FRIEND_SUGGESTIONS,
                                 ALL_FRIEND_REQUESTS,
                               ],
+                              onCompleted: async () => {
+                                try {
+                                  await CreateNotification({
+                                    ReceiverId: `${friends.User?._id}`,
+                                    SenderInfo: `${AuthInfo.Data?._id}`,
+                                    isGroup: Boolean(false),
+                                    isSeen: Boolean(false),
+                                    NotiEngine: {
+                                      GroupName: "",
+                                      NotiImage: "",
+                                      NotiText: "reject your friend request",
+                                    },
+                                    NotiReference: NotiReference.Reject,
+                                  });
+                                } catch (error) {
+                                  throw new Error(`${error}`);
+                                }
+                              },
                             });
                           }}
                         >
-                          <Typography fontWeight="bold" color="primary">
+                          <Typography
+                            fontWeight="bold"
+                            color={
+                              isEqual(mode.mode, "light") ? "primary" : "white"
+                            }
+                          >
                             Reject
                           </Typography>
                         </Button>
@@ -266,7 +372,11 @@ const Friends = () => {
           )}
           <Divider />
           <Box p={1}>
-            <Typography fontWeight="bold" fontSize="1.2rem">
+            <Typography
+              fontWeight="bold"
+              fontSize="1.2rem"
+              sx={{ color: isEqual(mode.mode, "light") ? "black" : "white" }}
+            >
               People you may know (
               {friendSuggestions?.FriendSuggestions?.length})
             </Typography>
@@ -298,7 +408,9 @@ const Friends = () => {
                       width: 200,
                       borderRadius: 3,
                       overflow: "hidden",
-                      border: `1px solid ${grey[200]}`,
+                      border: isEqual(mode.mode, "light")
+                        ? `1px solid ${grey[200]}`
+                        : "",
                       m: 0,
                       p: 0,
                     }}
@@ -314,7 +426,9 @@ const Friends = () => {
                       pt={1.2}
                       px={1.1}
                       sx={{
-                        bgcolor: "white",
+                        bgcolor: isEqual(mode.mode, "light")
+                          ? "white"
+                          : "rgba(255, 255, 255, 0.1)",
                         display: "flex",
                         gap: 0.1,
                         flexDirection: "column",
@@ -324,6 +438,11 @@ const Friends = () => {
                         component="span"
                         fontWeight="bold"
                         fontSize="17px"
+                        sx={{
+                          color: isEqual(mode.mode, "light")
+                            ? "black"
+                            : "white",
+                        }}
                       >
                         {suggestions?.Firstname} {suggestions?.Lastname}
                       </Typography>
@@ -352,7 +471,13 @@ const Friends = () => {
                       </Box>
                       <Button
                         variant="contained"
-                        sx={{ fontWeight: "bold", boxShadow: "none" }}
+                        sx={{
+                          fontWeight: "bold",
+                          boxShadow: "none",
+                          bgcolor: isEqual(mode.mode, "light")
+                            ? ""
+                            : lightBlue[500],
+                        }}
                         fullWidth
                         onClick={() => {
                           follow({
@@ -367,6 +492,24 @@ const Friends = () => {
                               FRIEND_SUGGESTIONS,
                               ALL_FRIEND_REQUESTS,
                             ],
+                            onCompleted: async () => {
+                              try {
+                                await CreateNotification({
+                                  ReceiverId: `${suggestions?._id}`,
+                                  SenderInfo: `${AuthInfo.Data?._id}`,
+                                  isGroup: Boolean(false),
+                                  isSeen: Boolean(false),
+                                  NotiEngine: {
+                                    GroupName: "",
+                                    NotiImage: "",
+                                    NotiText: "sent you a friend request",
+                                  },
+                                  NotiReference: NotiReference.Request,
+                                });
+                              } catch (error) {
+                                throw new Error(`${error}`);
+                              }
+                            },
                           });
 
                           setFollowDiff(`${suggestions?._id}`);
@@ -388,16 +531,46 @@ const Friends = () => {
                         <Button
                           variant="contained"
                           sx={{
-                            bgcolor: "#E8F0FE",
+                            bgcolor: isEqual(mode.mode, "light")
+                              ? "#E8F0FE"
+                              : "rgba(255, 255, 255, 0.1)",
                             boxShadow: "none",
                             ":hover": {
-                              bgcolor: "#E8F0FE",
+                              bgcolor: isEqual(mode.mode, "light")
+                                ? "#E8F0FE"
+                                : "rgba(255, 255, 255, 0.1)",
                               boxShadow: "none",
+                              color: isEqual(mode.mode, "light")
+                                ? "primary"
+                                : "white",
                             },
                           }}
                           fullWidth
+                          onClick={async () => {
+                            try {
+                              await CreateNotification({
+                                ReceiverId: `${suggestions?._id}`,
+                                SenderInfo: `${AuthInfo.Data?._id}`,
+                                isGroup: Boolean(false),
+                                isSeen: Boolean(false),
+                                NotiEngine: {
+                                  GroupName: "",
+                                  NotiImage: "",
+                                  NotiText: "tagged you",
+                                },
+                                NotiReference: NotiReference.Tag,
+                              });
+                            } catch (error) {
+                              throw new Error(`${error}`);
+                            }
+                          }}
                         >
-                          <Typography fontWeight="bold" color="primary">
+                          <Typography
+                            fontWeight="bold"
+                            color={
+                              isEqual(mode.mode, "light") ? "primary" : "white"
+                            }
+                          >
                             Tag Friend
                           </Typography>
                         </Button>
@@ -430,8 +603,12 @@ const Friends = () => {
           <Divider />
           <Box py={2}>
             <Box>
-              <Typography fontWeight="bold" fontSize="1.2rem">
-                All of your friends (12)
+              <Typography
+                fontWeight="bold"
+                fontSize="1.2rem"
+                sx={{ color: isEqual(mode.mode, "light") ? "black" : "white" }}
+              >
+                All of your friends ({userFriends?.AllFriends?.length})
               </Typography>
             </Box>
           </Box>
@@ -455,14 +632,23 @@ const Friends = () => {
             </Box>
           ) : (
             <Box py={1} sx={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
-              {userFriends?.AllFriends?.map((friends) => {
+              {AllFriends.map((friends, ind) => {
+                const GetRequestId = map(
+                  userFriends?.AllFriends?.filter(
+                    (value, index) => index === ind
+                  ),
+                  property("_id")
+                )[0];
+
                 return (
                   <Box
                     sx={{
                       width: 200,
                       borderRadius: 3,
                       overflow: "hidden",
-                      border: `1px solid ${grey[200]}`,
+                      border: isEqual(mode.mode, "light")
+                        ? `1px solid ${grey[200]}`
+                        : "black",
                       m: 0,
                       p: 0,
                     }}
@@ -470,7 +656,7 @@ const Friends = () => {
                     <Box sx={{ p: 0, m: 0, width: "inherit" }}>
                       <img
                         alt=""
-                        src={`${friends.User?.Image}`}
+                        src={`${friends.Image}`}
                         style={{ width: 200, height: 210, objectFit: "cover" }}
                       />
                     </Box>
@@ -478,7 +664,9 @@ const Friends = () => {
                       pt={1.2}
                       px={1.1}
                       sx={{
-                        bgcolor: "white",
+                        bgcolor: isEqual(mode.mode, "light")
+                          ? "white"
+                          : "rgba(255, 255, 255, 0.2)",
                         display: "flex",
                         gap: 0.1,
                         flexDirection: "column",
@@ -488,8 +676,11 @@ const Friends = () => {
                         component="span"
                         fontWeight="bold"
                         fontSize="17px"
+                        sx={{
+                          color: isEqual(mode.mode, "light") ? "dark" : "white",
+                        }}
                       >
-                        {friends.User?.Firstname} {friends.User?.Lastname}
+                        {friends.Firstname} {friends.Lastname}
                       </Typography>
                       <Box
                         sx={{
@@ -516,13 +707,38 @@ const Friends = () => {
                       </Box>
                       <Button
                         variant="contained"
-                        sx={{ fontWeight: "bold", boxShadow: "none" }}
+                        sx={{
+                          fontWeight: "bold",
+                          boxShadow: "none",
+                          bgcolor: isEqual(mode.mode, "light")
+                            ? ""
+                            : lightBlue[500],
+                        }}
                         fullWidth
                         onClick={() => {
                           unfollow({
                             variables: {
-                              unFollowFriendId: `${friends.User?._id}`,
-                              userId: `${AuthInfo.Data?._id}`,
+                              unFollowUserId: `${AuthInfo.Data?._id}`,
+                              friendId: `${friends._id}`,
+                              unFollowId: `${GetRequestId}`,
+                            },
+                            onCompleted: async () => {
+                              try {
+                                await CreateNotification({
+                                  ReceiverId: `${friends._id}`,
+                                  SenderInfo: `${AuthInfo.Data?._id}`,
+                                  isGroup: Boolean(false),
+                                  isSeen: Boolean(false),
+                                  NotiEngine: {
+                                    GroupName: "",
+                                    NotiImage: "",
+                                    NotiText: "unfollowed you ",
+                                  },
+                                  NotiReference: NotiReference.unfollowed,
+                                });
+                              } catch (error) {
+                                throw new Error(`${error}`);
+                              }
                             },
                             refetchQueries: [ALL_FRIENDS, ALL_FRIEND_REQUESTS],
                           });
@@ -545,16 +761,28 @@ const Friends = () => {
                         <Button
                           variant="contained"
                           sx={{
-                            bgcolor: "#E8F0FE",
+                            bgcolor: isEqual(mode.mode, "light")
+                              ? "#E8F0FE"
+                              : "rgba(255, 255, 255, 0.1)",
                             boxShadow: "none",
                             ":hover": {
-                              bgcolor: "#E8F0FE",
+                              bgcolor: isEqual(mode.mode, "light")
+                                ? "#E8F0FE"
+                                : "rgba(255, 255, 255, 0.1)",
                               boxShadow: "none",
+                              color: isEqual(mode.mode, "light")
+                                ? "primary"
+                                : "white",
                             },
                           }}
                           fullWidth
                         >
-                          <Typography fontWeight="bold" color="primary">
+                          <Typography
+                            fontWeight="bold"
+                            color={
+                              isEqual(mode.mode, "light") ? "primary" : "white"
+                            }
+                          >
                             Mute friend
                           </Typography>
                         </Button>

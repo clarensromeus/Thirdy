@@ -24,4 +24,8 @@ interface IDrawer {
   CloseDialog: () => void;
 }
 
-export type { IAuthState, IGetData, IinfoState, IDrawer };
+interface IMode {
+  mode: string;
+}
+
+export type { IAuthState, IGetData, IinfoState, IDrawer, IMode };

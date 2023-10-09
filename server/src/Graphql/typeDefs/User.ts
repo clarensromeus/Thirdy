@@ -3,23 +3,20 @@ import { gql } from "graphql-tag";
 export default gql`
   #______________Queries____________________
   extend type Query {
-    _: String
-    hello: String!
+    userStatics(userID: ID!): Statics
     userData(_id: ID!): userInfo
     Connection(connectionInfo: connectionInfo!): Response!
-    allUsers: [allUser]
+    allUsers(_id: ID!): [allUser]
   }
   #________________Mutations_________________
   extend type Mutation {
-    _: String
     Registeration(registerInfo: registerInfo!): Response!
-    ChangeProfile(file: Upload!, _id: String!): uploadResponse
+    ChangeUserProfile(file: Upload!, _id: String!): uploadResponse
     ChangeCover(file: Upload!, _id: String!): uploadResponse
-  }
-
-  #________________Subscriptions______________
-  extend type Subscription {
-    _: String
+    SendMail(mail: Mail!, code: String!): Response!
+    LogOut: Response
+    OnlineOfflineStatus(userId: ID!, online: Boolean!): Response
+    ChangePassword(userEmail: String!, newPassword: String!): Response
   }
 
   #________________types______________________
@@ -29,8 +26,14 @@ export default gql`
     success: Boolean!
   }
 
+  type Statics {
+    follower: Int
+    following: Int
+    posts: Int!
+  }
+
   type userInfo {
-    _id: MongoId
+    _id: MongoId @cacheControl(maxAge: 40, scope: PRIVATE)
     Firstname: String!
     Lastname: String!
     Email: String
@@ -76,6 +79,13 @@ export default gql`
     Username: String
     Email: String
     Password: String!
+  }
+
+  input Mail {
+    DESTINATION: String!
+    SUBJECT: String
+    HTMLBODY: String!
+    MESSAGE: String!
   }
 
   input registerInfo {

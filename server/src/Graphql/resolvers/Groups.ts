@@ -3,6 +3,7 @@ import GraphQLUpload from "graphql-upload/GraphQLUpload.mjs";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 import { PubSub } from "graphql-subscriptions";
+import { GraphQLError } from "graphql";
 import lodash from "lodash";
 // internally crafted imports of resources
 import { Resolvers } from "../../__generate__/types";
@@ -12,6 +13,8 @@ import { ImageType } from "../../typings/upload.ts";
 import { IGroup } from "../../typings/Groups.ts";
 import dateScalar from "../../Service/DataScalar.ts";
 import { GROUP_CHAT_CHANNEL } from "../../Constants/GroupChat.ts";
+import { userModel } from "../../Models/User.ts";
+import { UNAUTHORIZED } from "../../Constants/User.ts";
 
 const __filename: string = fileURLToPath(import.meta.url);
 const __dirname: string = dirname(__filename);
@@ -54,12 +57,34 @@ const Group: Resolvers = {
         throw new Error(`${error}`);
       }
     },
+    GroupUserSuggestions: async (__, { groupId }) => {
+      try {
+        const groupUsers = await groupModel
+          .findOne()
+          .populate({ path: "GroupUsers", select: "_id" })
+          .select("GroupUsers")
+          .where({ _id: groupId });
+        // grab all users except those already being participants in the group
+        const userSuggestions = await userModel
+          .find()
+          .where({ _id: { $not: { $in: groupUsers?.GroupUsers } } });
+
+        return userSuggestions;
+      } catch (error) {
+        throw new Error(`${error}`);
+      }
+    },
     GroupInfo: async (__, { groupId, groupName }) => {
       try {
-        const group = await groupModel.findOne({
-          GroupName: groupName,
-          _id: groupId,
-        });
+        const group = await groupModel
+          .findOne({
+            GroupName: groupName,
+            _id: groupId,
+          })
+          .populate({
+            path: "GroupUsers",
+            select: "_id Firstname Lastname Image",
+          });
 
         return group;
       } catch (error) {
@@ -68,7 +93,6 @@ const Group: Resolvers = {
     },
     ChatWithFriendsInGroups: async (__, { groupId }, context) => {
       try {
-        console.log(context);
         const chats = await groupChatModel
           .find()
           .populate({ path: "From", select: "_id Firstname Lastname Image" })
@@ -85,7 +109,6 @@ const Group: Resolvers = {
     createGroup: async (__, { createData, file }) => {
       try {
         const { GroupName, Users, Privacy, Administrators } = await createData;
-        console.log(file);
 
         if (typeof file !== "undefined") {
           const { secureUrl, public_id }: ImageType<string> = await UploadFile(
@@ -95,7 +118,7 @@ const Group: Resolvers = {
             "Thirdy_social"
           );
 
-          const createGroup = await groupModel.create({
+          await groupModel.create({
             GroupName,
             GroupUsers: Users,
             Privacy,
@@ -110,7 +133,7 @@ const Group: Resolvers = {
           };
         }
 
-        const createGroup = await groupModel.create({
+        await groupModel.create({
           GroupName,
           GroupUsers: Users,
           Administrators,
@@ -119,6 +142,33 @@ const Group: Resolvers = {
 
         return {
           message: "Group is created with success",
+          success: true,
+        };
+      } catch (error) {
+        throw new Error(`${error}`);
+      }
+    },
+    ExcludeAdmin: async (__, { adminId, adminRoleId, groupId }) => {
+      try {
+        const isAdmin = await groupModel.findOne({
+          Administrators: { $in: adminId },
+        });
+        // if user not an admin, no right to exclude a user in the group
+        if (!isAdmin)
+          return {
+            message: "sorry you are not an administrator",
+            success: false,
+          };
+
+        // if an administrator then he has access to exclude administrator from the group
+        await groupModel
+          .findOneAndUpdate({
+            $pull: { GroupUsers: adminRoleId, Administrators: adminRoleId },
+          })
+          .where({ _id: groupId });
+
+        return {
+          message: "",
           success: true,
         };
       } catch (error) {
@@ -245,7 +295,11 @@ const Group: Resolvers = {
           Administrators: { $in: adminId },
         });
         // if user not an admin, no right to add a user in the group
-        if (!isAdmin) return {};
+        if (!isAdmin)
+          return {
+            message: "sorry you are not an administrator",
+            success: false,
+          };
         // if an administrator then he has access to add users in the group
         await groupModel
           .findOneAndUpdate({ $push: { GroupUsers: guestId } })
@@ -265,7 +319,11 @@ const Group: Resolvers = {
           Administrators: { $in: adminId },
         });
         // if user not an admin, no right to exclude a user in the group
-        if (!isAdmin) return {};
+        if (!isAdmin)
+          return {
+            message: "sorry you are not an administrator",
+            success: false,
+          };
 
         // if an administrator then he has access to exclude users in the group
         await groupModel
@@ -284,9 +342,9 @@ const Group: Resolvers = {
       try {
         // first check if user is an administrator in the group
         const isAdmin = await groupModel
-          .findOneAndUpdate({
+          .findOne({
             _id: groupId,
-            Administrators: { $in: [adminId] },
+            Administrators: { $in: adminId },
           })
           .select("User");
 
@@ -316,9 +374,9 @@ const Group: Resolvers = {
       try {
         // first check if user is an administrator in the group
         const isAdmin = await groupModel
-          .findOneAndUpdate({
+          .findOne({
             _id: groupId,
-            Administrators: { $in: [adminId] },
+            Administrators: { $in: adminId },
           })
           .select("User");
 
@@ -345,7 +403,15 @@ const Group: Resolvers = {
 
   Subscription: {
     ChatWithFriendsInGroups: {
-      subscribe: () => {
+      subscribe: (__, args, { user, isAuth }) => {
+        if (!user && isAuth) {
+          throw new GraphQLError("sorry, you're not an authorized user", {
+            extensions: {
+              code: UNAUTHORIZED,
+              warning: "retry with an authorized account",
+            },
+          });
+        }
         return {
           [Symbol.asyncIterator]: () => pubSub.asyncIterator(["TEST"]),
         };

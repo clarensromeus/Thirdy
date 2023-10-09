@@ -1,12 +1,8 @@
 import * as React from "react";
 import { Box, Typography, Avatar, IconButton, Divider } from "@mui/material";
 import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
-import { CssTextFieldShare } from "../MuiStyles/textField";
 import { blue, grey } from "@mui/material/colors";
 import { EventNoteOutlined } from "@mui/icons-material";
-import CollectionsIcon from "@mui/icons-material/Collections";
-import EmojiEmotionsIcon from "@mui/icons-material/EmojiEmotions";
-import SendIcon from "@mui/icons-material/Send";
 import { useParams } from "react-router-dom";
 import { useRecoilValue } from "recoil";
 import { useQuery, useMutation, useSubscription } from "@apollo/client";
@@ -14,7 +10,8 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { isUndefined, gt, size, isEqual, upperFirst } from "lodash";
 import { useOutletContext } from "react-router-dom";
-import { SyncLoader, CircleLoader } from "react-spinners";
+import { useReactiveVar } from "@apollo/client";
+import { SyncLoader } from "react-spinners";
 // internally crafted imports of resources
 import {
   UserChatsQueryVariables,
@@ -27,9 +24,19 @@ import { IAuthState } from "../typings/GlobalState";
 import { InstantUserChatsSubscription } from "../__generated__/graphql";
 import { INSTANT_USER_CHATS, CHAT_WITH_FRIENDS } from "../graphql/Chat.graphql";
 import { IUserChat, ContextType } from "../typings/Chat";
+import { IBottomChatProps } from "../typings/Chat";
+import BottomChat from "../components/BottomChat";
+import modeContext from "../store/ModeContext";
+import { IMode } from "../typings/GlobalState";
+import { USER_FRIENDS_CHAT } from "../graphql/Chat.graphql";
+import { NotiReference } from "../Enums";
+import { Authentication } from "../Global/GlobalAuth";
+import useNotification from "../hooks/useNotifications";
+import { ALL_FRIENDS } from "../graphql/Friends.graphql";
 
 const ChatSpace = () => {
   const contextData = React.useContext(Context);
+  const modeContextData = React.useContext(modeContext);
 
   // it allows to have access to actual date from dayjs
   dayjs.extend(relativeTime);
@@ -40,20 +47,21 @@ const ChatSpace = () => {
   const ScrollToTheBottom = React.useRef<HTMLDivElement | null>(null);
 
   const AuthInfo = useRecoilValue<Partial<IAuthState>>(contextData.GetAuthInfo);
+  const mode = useRecoilValue<IMode>(modeContextData.GetMode);
+
+  const isAuth = useReactiveVar(Authentication);
+  const { CreateNotification, PushNotification } = useNotification();
 
   const { id }: { id?: string } = useParams<{ id: string }>();
 
-  const { data, loading } = useQuery<IUserChat, UserChatsQueryVariables>(
-    USER_CHATS,
-    {
-      variables: {
-        chatUserInfo: {
-          friendId: `${id}`,
-          activeUserId: `${AuthInfo.Data?._id}`,
-        },
+  const { data } = useQuery<IUserChat, UserChatsQueryVariables>(USER_CHATS, {
+    variables: {
+      chatUserInfo: {
+        friendId: `${id}`,
+        activeUserId: `${AuthInfo.Data?._id}`,
       },
-    }
-  );
+    },
+  });
 
   const [chatwithfriends, { loading: chatLoading }] = useMutation<
     ChatWithFriendsMutation,
@@ -72,6 +80,9 @@ const ChatSpace = () => {
       setChats(data.Chat);
     }
   }, [data]);
+
+  // push real time notifications
+  PushNotification({ isAuth: Boolean(isAuth.isLoggedIn) });
 
   // Creating subscription for chats
   useSubscription<InstantUserChatsSubscription>(INSTANT_USER_CHATS, {
@@ -108,6 +119,13 @@ const ChatSpace = () => {
     // scroll to the bottom of the list of messages
     ScrollFunc("smooth");
   }, [id, chats.length, chatLoading]);
+
+  const bottomData: IBottomChatProps = {
+    handleChange,
+    userId: `${AuthInfo.Data?._id}`,
+    setText,
+    text,
+  };
 
   return (
     <>
@@ -148,8 +166,16 @@ const ChatSpace = () => {
           <Typography component="span" color="text.secondary">
             not active now
           </Typography>
-          <IconButton sx={{ bgcolor: "#E8F0FE" }}>
-            <AccountCircleOutlinedIcon sx={{ color: "black" }} />
+          <IconButton
+            sx={{
+              bgcolor: isEqual(mode.mode, "light")
+                ? "#E8F0FE"
+                : "rgba(255, 255, 255, 0.3)",
+            }}
+          >
+            <AccountCircleOutlinedIcon
+              sx={{ color: isEqual(mode.mode, "light") ? "black" : grey[100] }}
+            />
           </IconButton>
         </Box>
       </Box>
@@ -259,11 +285,9 @@ const ChatSpace = () => {
                         }}
                       >
                         <Box
-                          sx={
-                            {
-                              /* order: isGuest ? "2" : "1"  */
-                            }
-                          }
+                          sx={{
+                            order: isGuest ? "2" : "1",
+                          }}
                         >
                           <Avatar
                             alt="chatProfile"
@@ -276,6 +300,9 @@ const ChatSpace = () => {
                             bgcolor:
                               value?.From?._id === AuthInfo.Data?._id
                                 ? blue[700]
+                                : value.From?._id !== AuthInfo.Data?._id &&
+                                  isEqual(mode.mode, "dark")
+                                ? "rgba(255,255, 255, 0.2)"
                                 : "#d0e0fd",
                             borderRadius: 2,
                             order: isGuest ? "1" : "2",
@@ -291,6 +318,9 @@ const ChatSpace = () => {
                                   color:
                                     value?.From?._id === AuthInfo.Data?._id
                                       ? "#fafafa"
+                                      : value?.From?._id !== AuthInfo.Data &&
+                                        isEqual(mode.mode, "dark")
+                                      ? "white"
                                       : null,
                                 }}
                               >
@@ -299,7 +329,7 @@ const ChatSpace = () => {
                             )}
                           {!isUndefined(value.PicturedMessage) &&
                             gt(value?.PicturedMessage?.length, 1) &&
-                            isUndefined(value.Chat) && (
+                            isEqual(value.Chat, "") && (
                               <img
                                 style={{ width: 200, height: 140 }}
                                 alt={`${value.From?._id}`}
@@ -340,7 +370,9 @@ const ChatSpace = () => {
                             )}
                         </Box>
                       </Box>
-                      <Box sx={{ alignSelf: "flex-end" }}>
+                      <Box
+                        sx={{ alignSelf: isGuest ? "flex-start" : "flex-end" }}
+                      >
                         <Typography
                           variant="body1"
                           color="text.secondary"
@@ -388,6 +420,25 @@ const ChatSpace = () => {
                   To: `${friendData?._id}`,
                 },
               },
+              refetchQueries: [USER_FRIENDS_CHAT, ALL_FRIENDS],
+              onCompleted: async () => {
+                try {
+                  await CreateNotification({
+                    ReceiverId: `${friendData?._id}`,
+                    SenderInfo: `${AuthInfo.Data?._id}`,
+                    isGroup: Boolean(false),
+                    isSeen: Boolean(false),
+                    NotiEngine: {
+                      GroupName: "",
+                      NotiImage: "",
+                      NotiText: text,
+                    },
+                    NotiReference: NotiReference.Chat,
+                  });
+                } catch (error) {
+                  throw new Error(`${error}`);
+                }
+              },
             });
           } catch (error) {
             throw new Error(`${error}`);
@@ -399,49 +450,17 @@ const ChatSpace = () => {
             height: "10%",
             position: "fixed",
             bottom: 0,
-            borderTop: `1px solid ${grey[400]}`,
+            borderTop: isEqual(mode.mode, "light")
+              ? `1px solid ${grey[400]}`
+              : `1px solid ${grey[800]}`,
             width: "100%",
             display: "flex",
             alignItems: "center",
             alignContent: "center",
-            bgcolor: "white",
+            bgcolor: isEqual(mode.mode, "light") ? "white" : "black",
           }}
         >
-          <Box
-            sx={{
-              position: "relative",
-              width: "71%",
-              boxSizing: "border-box",
-            }}
-          >
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                alignContent: "center",
-                justifyContent: "space-between",
-                gap: 0.5,
-              }}
-            >
-              <IconButton>
-                <CollectionsIcon sx={{ color: blue[700] }} />
-              </IconButton>
-              <IconButton>
-                <EmojiEmotionsIcon sx={{ color: blue[700] }} />
-              </IconButton>
-
-              <CssTextFieldShare
-                size="small"
-                fullWidth
-                sx={{ "& fieldset": { border: "none" } }}
-                placeholder="write a message..."
-                onChange={handleChange}
-              />
-              <IconButton type="submit">
-                <SendIcon sx={{ color: blue[700] }} />
-              </IconButton>
-            </Box>
-          </Box>
+          <BottomChat {...bottomData} />
         </Box>
       </form>
     </>

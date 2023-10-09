@@ -7,4 +7,13 @@ interface IMenu {
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-export type { IMenu };
+type ILogOutProps = {
+  Icon: React.ReactElement | null;
+  RouteName: string;
+};
+
+type ILogOut = {
+  mode: string;
+};
+
+export type { IMenu, ILogOutProps, ILogOut };

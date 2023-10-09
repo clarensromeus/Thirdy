@@ -1,10 +1,10 @@
 import GraphQLUpload from "graphql-upload/GraphQLUpload.mjs";
 import { PubSub } from "graphql-subscriptions";
 import lodash from "lodash";
-import { ObjectId, PopulatedDoc } from "mongoose";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
-// intenally crafted imports of ressources
+import { GraphQLError } from "graphql";
+// internally crafted imports of resources
 import { Resolvers } from "../../__generate__/types";
 import { chatModel, friendModel } from "../../Models/index.ts";
 import MongoId from "../../Service/MongoIdScalar.ts";
@@ -12,6 +12,8 @@ import { CHAT_CHANNEL } from "../../Constants/index.ts";
 import { userModel } from "../../Models/User.ts";
 import UploadFile from "../../Service/ImageUpload.ts";
 import dateScalar from "../../Service/DataScalar.ts";
+import { ImageType } from "../../typings/upload.ts";
+import { UNAUTHORIZED } from "../../Constants/User.ts";
 
 const { merge, concat, isNil } = lodash;
 
@@ -45,7 +47,6 @@ const Chat: Resolvers = {
           .populate({
             path: "Chats",
             match: { From: { $eq: friendId } },
-            // populate: { path: "From", select: "_id Firstname Lastname Image" },
             populate: ["From", "To"],
           })
           .select("Chats");
@@ -77,18 +78,39 @@ const Chat: Resolvers = {
         throw new Error(`${error}`);
       }
     },
+    UserFriendChat: async (__, { userId }) => {
+      try {
+        const friendsMessages = await userModel
+          .findOne()
+          .populate({
+            path: "Chats",
+            select: "_id PicturedMessage Chat From createdAt",
+            populate: { path: "From", select: "_id" },
+          })
+          .select("Chats")
+          .where({ _id: userId });
+
+        if (!friendsMessages) return [];
+
+        return friendsMessages.Chats;
+      } catch (error) {
+        throw new Error(`${error}`);
+      }
+    },
   },
   Mutation: {
     ChatWithFriends: async (__, { chatInfo, picture }) => {
       try {
         const { Chat, To, From } = chatInfo;
+        console.log("just launching for today");
+        console.log(picture);
 
         if (!isNil(picture)) {
-          const { public_id, serverUrl } = await UploadFile(
+          const { serverUrl, public_id }: ImageType<string> = await UploadFile(
             picture,
             true,
             __dirname,
-            "Thirdy_app"
+            "Thirdy_social"
           );
 
           const createChat = await chatModel.create({
@@ -156,7 +178,15 @@ const Chat: Resolvers = {
   },
   Subscription: {
     Chat: {
-      subscribe: () => {
+      subscribe: (__, args, { user, isAuth }) => {
+        if (!user && isAuth) {
+          throw new GraphQLError("sorry, you're not an authorized user", {
+            extensions: {
+              code: UNAUTHORIZED,
+              warning: "retry with an authorized account",
+            },
+          });
+        }
         return {
           // listening to the chat channel event
           [Symbol.asyncIterator]: () => pubSub.asyncIterator([CHAT_CHANNEL]),

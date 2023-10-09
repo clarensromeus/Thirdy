@@ -25,8 +25,14 @@ export class Post {
   @prop({ type: () => String, required: true })
   public PostReference!: string;
 
+  @prop({ ref: () => Post, required: false })
+  public RetweetedPost?: Ref<Post>;
+
   @prop({ type: () => Boolean, required: true, default: false })
   public isRetweeted!: boolean;
+
+  @prop({ type: () => Boolean, required: true, default: false })
+  public isGroup!: boolean;
 
   @prop({ ref: () => Retweeted, required: false })
   public RetweetedRating?: Ref<Retweeted>[];

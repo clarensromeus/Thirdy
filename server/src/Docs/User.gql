@@ -36,3 +36,10 @@ mutation Change_Profile($changeProfileFile2: Upload!, $id: String!) {
     success
   }
 }
+
+mutation ChangePassword($changePasswordUserId: ID!, $newPassword: String!) {
+  ChangePassword(userId: $changePasswordUserId, newPassword: $newPassword) {
+    message
+    success
+  }
+}

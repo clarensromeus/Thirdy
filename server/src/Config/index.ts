@@ -1,11 +1,5 @@
 import { config, DotenvConfigOutput } from "dotenv";
 
-type IEnv<T> = {
-  PORT: T;
-  DB_USER: T;
-  DB_PASSWORD: T;
-};
-
 const { parsed }: DotenvConfigOutput = config();
 
 export const {
@@ -19,4 +13,6 @@ export const {
   Cloud_Name,
   Api_Secret,
   Api_Key,
+  EMAIL_PASS,
+  EMAIL_USER,
 }: any = parsed;

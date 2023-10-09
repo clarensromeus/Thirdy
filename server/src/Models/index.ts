@@ -11,6 +11,7 @@ import { Chat } from "./Chat.ts";
 import { Comments } from "./Comments.ts";
 import { GroupChat } from "./GroupChat.ts";
 import { Status } from "./Status.ts";
+import { Notifications } from "./Notification.ts";
 
 const likeModel = getModelForClass(Like);
 const userModel = getModelForClass(User);
@@ -23,6 +24,7 @@ const chatModel = getModelForClass(Chat);
 const commentModel = getModelForClass(Comments);
 const groupChatModel = getModelForClass(GroupChat);
 const statusModel = getModelForClass(Status);
+const notificationModel = getModelForClass(Notifications);
 
 export {
   likeModel,
@@ -36,4 +38,5 @@ export {
   commentModel,
   groupChatModel,
   statusModel,
+  notificationModel,
 };

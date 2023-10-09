@@ -50,18 +50,18 @@ const StyledBadgeComment = styled(Badge)(({ theme }) => ({
 const CssTextField = styled(TextField)({
   "& .MuiInput-underline:after": {
     borderBottomColor: "#B2BAC2",
+    border: "none",
   },
   "& .MuiOutlinedInput-root": {
-    backgroundColor: "#E8F0FE",
+    // backgroundColor: "#E8F0FE",
     borderRadius: 20,
     "& fieldset": {
-      borderColor: "#E8F0FE",
+      border: "none",
     },
     "&:hover fieldset": {
-      borderColor: "#E8F0FE",
+      border: "none",
     },
     "&.Mui-focused fieldset": {
-      borderColor: "#E8F0FE",
       border: "none",
     },
   },

@@ -29,7 +29,7 @@ import { useLazyQuery, ApolloError } from "@apollo/client";
 import { ClipLoader } from "react-spinners";
 import { useNavigate, NavigateFunction, Navigate } from "react-router-dom";
 import uniqueId from "lodash/uniqueId";
-// external imports of ressources
+// externally crafted imports of resources
 import validateConnection from "../validators/Connection";
 import { USER_CONNECTION } from "../graphql/User.graphql";
 import { response } from "../typings/Authentication";
@@ -94,7 +94,8 @@ const Connection = (): JSX.Element => {
           // and store token into the browser using localstorage
           if (data.Connection.success) {
             localStorage.setItem("TOKEN", `${data.Connection.token}`);
-            navigate("/dashboard");
+            localStorage.setItem("MODE", JSON.stringify("light"));
+            navigate("/thirdy");
           }
 
           setInfo({
@@ -112,7 +113,7 @@ const Connection = (): JSX.Element => {
   return (
     <>
       {isAuth ? (
-        <Navigate to="/dashboard" />
+        <Navigate to="/thirdy" />
       ) : (
         <Container>
           <Snackbar
@@ -266,12 +267,14 @@ const Connection = (): JSX.Element => {
                             />
                           </Box>
                           <Box mt={1}>
-                            <Typography
-                              color="primary"
-                              sx={{ textDecoration: "underline" }}
+                            <Link
+                              to="/forgotpassword"
+                              style={{
+                                color: "#1976D2",
+                              }}
                             >
-                              Forgot password?
-                            </Typography>
+                              Forgot password
+                            </Link>
                           </Box>
                         </Box>
                       </Grid>

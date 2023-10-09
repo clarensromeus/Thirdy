@@ -3,15 +3,16 @@ import { gql } from "graphql-tag";
 export default gql`
   #---------------Scalars<----------------------#
   scalar MongoId
+  scalar Date
 
   #---------------->Queries<---------------------#
   extend type Query {
     MutualFriends(friendId: ID!, userId: ID!): [friends]
     FriendRequest(userId: ID!): friends
-    TestUser: User
     AllFriends(_id: ID!): [friends!]
     FriendSuggestions(_id: ID!): [suggestions]
     allFriendRequests(_id: ID!): [friends!]
+    randomFriendRequest(AcceptedId: ID!): friends
   }
 
   #---------------->Mutations<-------------------#
@@ -23,7 +24,7 @@ export default gql`
       friendId: String!
       userRequestId: ID!
     ): friendResponse
-    unFollow(userId: ID!, friendId: ID!): friendResponse
+    unFollow(userId: ID!, friendId: ID!, _id: ID): friendResponse
   }
 
   #------------------->Types<------------------#
@@ -56,8 +57,9 @@ export default gql`
     _id: MongoId
     RequestId: ID
     AcceptedId: ID
+    Receiver: User
     User: User
-    createdAt: String
+    createdAt: Date
   }
 
   #------------------->Inputs<-----------------#

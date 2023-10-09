@@ -1,6 +1,7 @@
 import { selector } from "recoil";
 import { IAuthState } from "../typings/GlobalState";
-import { AuthState } from "./Data";
+import { IMode } from "../typings/GlobalState";
+import { AuthState, AppMode } from "./Data";
 
 const GetAuthInfo = selector<Partial<IAuthState>>({
   key: "GetAuthInfo",
@@ -18,4 +19,21 @@ const GetAuthInfo = selector<Partial<IAuthState>>({
   },
 });
 
-export { GetAuthInfo };
+const GetMode = selector<IMode>({
+  key: "LightOrDark",
+  get: ({ get }) => {
+    const appMode = get(AppMode);
+    return {
+      ...appMode,
+    };
+  },
+
+  // this feature is for caching already got data not to perform a re-render on each state update
+  // if data is already taken a flight
+  cachePolicy_UNSTABLE: {
+    // caching all data
+    eviction: "keep-all",
+  },
+});
+
+export { GetAuthInfo, GetMode };

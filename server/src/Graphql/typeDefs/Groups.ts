@@ -11,6 +11,7 @@ export default gql`
     GroupInfo(groupName: String!, groupId: ID!): groupData
     ChatWithFriendsInGroups(groupId: ID!): [ChatsIngroup]
     GroupUsers(groupName: String!, groupId: ID!): [User]
+    GroupUserSuggestions(groupId: ID!): [User]
   }
 
   #------------------>Mutations<------------------------#
@@ -21,6 +22,7 @@ export default gql`
     AddUser(adminId: ID!, guestId: ID!, groupId: ID!): groupResponse
     ChatWithFriendsInGroups(dataFeed: dataFeed!, picture: Upload): groupResponse
     ExcludeUser(adminId: ID!, guestId: ID!, groupId: ID!): groupResponse
+    ExcludeAdmin(adminId: ID!, adminRoleId: ID!, groupId: ID!): groupResponse
     AddAdminRole(adminId: ID!, userId: ID!, groupId: ID!): groupResponse
     RemoveAdminRole(adminId: ID!, userId: ID!, groupId: ID!): groupResponse
   }
@@ -41,6 +43,7 @@ export default gql`
     Lastname: String
     Email: String
     Image: String
+    isGroup: Boolean
   }
 
   type Posts {
@@ -60,6 +63,7 @@ export default gql`
     GroupCoverImage: String
     Public_Id: String
     Privacy: String
+    Administrators: [User]
     GroupUsers: [User]
     createdAt: Date
   }

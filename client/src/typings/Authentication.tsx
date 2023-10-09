@@ -12,4 +12,12 @@ interface ISignUp {
   Registeration: response;
 }
 
-export type { Iconnect, ISignUp, response };
+interface isAuthenticated {
+  isLoggedIn: boolean;
+}
+
+type IAuthentication = {
+  isLoggedIn: isAuthenticated;
+};
+
+export type { Iconnect, ISignUp, response, isAuthenticated, IAuthentication };

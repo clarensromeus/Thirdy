@@ -4,12 +4,13 @@ export default gql`
   scalar MongoId
 
   extend type Query {
-    GetallStatus(userId: ID!): userStatus!
+    GetUserStatus(userId: ID!): [Status]!
+    FriendsStatus(userId: ID!): [Status]!
   }
 
   extend type Mutation {
     AddStatus(_id: ID!, picture: Upload!, userId: ID!): statusResponse
-    DeleteStatusImage(StatusId: ID!, userId: ID!): statusResponse
+    DeleteStatus(StatusId: ID!, userId: ID!): statusResponse
   }
 
   type User {
@@ -30,15 +31,10 @@ export default gql`
     success: Boolean
   }
 
-  type StatusInfo {
-    StatusId: String!
-    public_id: String!
-    Images: String!
-  }
-
-  type userStatus {
-    _id: MongoId!
-    User: User!
-    StatusImages: [StatusInfo]!
+  type Status {
+    UserId: ID
+    StatusId: ID
+    public_id: ID
+    Image: String
   }
 `;

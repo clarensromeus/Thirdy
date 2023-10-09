@@ -2,35 +2,89 @@ import * as React from "react";
 import { Box, Avatar, Button, Typography, Divider } from "@mui/material";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import blue from "@mui/material/colors/blue";
-import { useRecoilValue } from "recoil";
 import DateRangeIcon from "@mui/icons-material/DateRange";
 import upperFirst from "lodash/upperFirst";
 import IconButton from "@mui/material/IconButton";
+import { useRecoilValue } from "recoil";
+import grey from "@mui/material/colors/grey";
+import { useParams } from "react-router-dom";
 import EditIcon from "@mui/icons-material/Edit";
-// externally crafted imports of ressources
+import { useMutation, useQuery } from "@apollo/client";
+// externally crafted imports of resources
 import CardPost from "../components/Card";
 import Context from "../store/ContextApi";
 import { IAuthState } from "../typings/GlobalState";
 import { IFrame } from "../typings/Profile";
 import UploadFrame from "../components/UploadFrame";
+import {
+  Change_CoverMutation,
+  Change_CoverMutationVariables,
+  UserStatisticsQuery,
+  UserStatisticsQueryVariables,
+} from "../__generated__/graphql";
+import { CHANGE_COVER_IMAGE, USER_STATISTICS } from "../graphql/User.graphql";
+import uploadFile from "../components/Upload";
+import { IUpload } from "../typings/Profile";
+import modeContext from "../store/ModeContext";
+import { IMode } from "../typings/GlobalState";
+import { isEqual } from "lodash";
+import { ICard } from "../typings/Notifications";
 
 const Profile = () => {
   const contextData = React.useContext(Context);
+  const modeContextData = React.useContext(modeContext);
 
-  const AuthInfo = useRecoilValue<Partial<IAuthState>>(contextData.GetAuthInfo);
+  const AuthInfo = useRecoilValue<Partial<IAuthState>>(
+    contextData?.GetAuthInfo
+  );
+
+  let { id } = useParams<{ id: string }>();
+
+  const mode = useRecoilValue<IMode>(modeContextData.GetMode);
+
+  const [image, setImage] = React.useState<File | undefined>();
+
+  const [previewImage, setPreviewImage] = React.useState<string>("");
+  const [isValid, setValid] = React.useState<boolean>(false);
 
   const [openFrame, setOpenFrame] = React.useState<boolean>(false);
-  // state that detects whether user wants to change image cover or profile
-  const [isCover, setCover] = React.useState<boolean>(false);
 
   const Frame: IFrame = {
     openFrame,
     setOpenFrame,
     Image: `${AuthInfo.Data?.Image}`,
+    userId: `${AuthInfo.Data?._id}`,
   };
 
-  const cardWidth: { width: number } = {
+  const uploadCoverImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const validity = e.target.validity;
+    const selectedFile = e.target.files as FileList;
+
+    if (validity && validity.valid) {
+      const FileData = uploadFile({
+        FileInfo: { file: selectedFile, valid: validity.valid },
+      }) satisfies IUpload;
+
+      setValid(Boolean(FileData?.valid));
+      setImage(FileData?.ImageInfo?.singleFile);
+      setPreviewImage(`${FileData?.ImageInfo?.previewImage}`);
+    }
+  };
+
+  // change background image of the user
+  const [ChangeCover] = useMutation<
+    Change_CoverMutation,
+    Change_CoverMutationVariables
+  >(CHANGE_COVER_IMAGE);
+
+  const { data, loading } = useQuery<
+    UserStatisticsQuery,
+    UserStatisticsQueryVariables
+  >(USER_STATISTICS, { variables: { userStaticsUserId: `${id}` } });
+
+  const cardWidth: ICard = {
     width: 500,
+    PostId: "",
   };
 
   return (
@@ -50,15 +104,34 @@ const Profile = () => {
             width="100%"
             height="200px"
             alt="backgroundImage"
-            src="https://teachyourkidscode.com/wp-content/uploads/2022/02/best-coding-language-for-games.jpg"
+            src={
+              isValid
+                ? previewImage
+                : "https://teachyourkidscode.com/wp-content/uploads/2022/02/best-coding-language-for-games.jpg"
+            }
           />
           <Box sx={{ p: 2, position: "absolute", zIndex: 2, top: 0, left: 0 }}>
-            <input hidden type="file" accept="/*" id="edit_cover" />
+            <input
+              hidden
+              type="file"
+              accept="/*"
+              id="edit_cover"
+              onChange={uploadCoverImage}
+            />
             <label htmlFor="edit_cover">
               <Button
                 variant="contained"
-                sx={{ borderRadius: 20 }}
-                startIcon={<EditIcon />}
+                sx={{
+                  borderRadius: 20,
+                  bgcolor: isEqual(mode.mode, "light") ? "primary" : "#0866ff",
+                }}
+                startIcon={
+                  <EditIcon
+                    sx={{
+                      color: isEqual(mode.mode, "light") ? "dark" : "white",
+                    }}
+                  />
+                }
                 component="span"
               >
                 <Typography
@@ -119,7 +192,11 @@ const Profile = () => {
           </Box>
         </Box>
         <Box sx={{ width: "100%" }}>
-          <Box pl={36} pt={1} sx={{ bgcolor: "white" }}>
+          <Box
+            pl={36}
+            pt={1}
+            sx={{ bgcolor: isEqual(mode.mode, "white") ? "white" : "dark" }}
+          >
             <Box>
               <Typography
                 fontWeight="bold"
@@ -133,28 +210,44 @@ const Profile = () => {
             <Box sx={{ display: "flex", gap: 2 }}>
               <Box sx={{ display: "flex", flexDirection: "column" }}>
                 <Box sx={{ textAlign: "center" }}>
-                  <Typography>followers</Typography>
+                  <Typography
+                    sx={{
+                      color: isEqual(mode.mode, "light") ? "black" : grey[100],
+                    }}
+                  >
+                    followers
+                  </Typography>
                 </Box>
                 <Box sx={{ textAlign: "center" }}>
                   <Typography variant="body1" color="text.secondary">
-                    12k
+                    {data?.userStatics?.follower}k
                   </Typography>
                 </Box>
               </Box>
               <Box sx={{ display: "flex", flexDirection: "column" }}>
                 <Box sx={{ textAlign: "center" }}>
-                  <Typography>followings</Typography>
+                  <Typography
+                    sx={{
+                      color: isEqual(mode.mode, "light") ? "black" : grey[100],
+                    }}
+                  >
+                    followings
+                  </Typography>
                 </Box>
                 <Box sx={{ textAlign: "center" }}>
                   <Typography variant="body1" color="text.secondary">
-                    1.8k
+                    {data?.userStatics?.following}k
                   </Typography>
                 </Box>
               </Box>
             </Box>
             <Box sx={{ display: "flex", gap: 1, pt: 1, alignItems: "center" }}>
               <Box>
-                <DateRangeIcon />
+                <DateRangeIcon
+                  sx={{
+                    color: isEqual(mode.mode, "light") ? "black" : grey[100],
+                  }}
+                />
               </Box>
               <Box>
                 <Typography color="text.secondary">
@@ -164,7 +257,14 @@ const Profile = () => {
             </Box>
             <Box sx={{ display: "flex", gap: 1, pt: 1, alignItems: "center" }}>
               <Box>
-                <Typography fontWeight="bold">Bio</Typography>
+                <Typography
+                  fontWeight="bold"
+                  sx={{
+                    color: isEqual(mode.mode, "light") ? "black" : grey[100],
+                  }}
+                >
+                  Bio
+                </Typography>
               </Box>
               <Box>
                 <Typography color="text.secondary">
@@ -180,25 +280,35 @@ const Profile = () => {
             <Divider />
           </Box>
         </Box>
-        <Box pl={36} sx={{ bgcolor: "white" }}>
+        <Box
+          pl={36}
+          sx={{ bgcolor: isEqual(mode.mode, "light") ? "white" : "dark" }}
+        >
           <Box
             pt={1}
             sx={{
               display: "flex",
               gap: "5px",
               borderBottom: `1px solid ${blue[500]}`,
-              maxWidth: 180,
+              maxWidth: 275,
             }}
           >
             <Typography fontWeight="bold" sx={{ color: blue[800] }}>
-              122
+              {data?.userStatics?.posts}
             </Typography>
-            <Typography fontWeight="bold">posts</Typography>
-            <Typography color="text.secondary">made by you</Typography>
+            <Typography
+              fontWeight="bold"
+              sx={{ color: isEqual(mode.mode, "light") ? "black" : grey[100] }}
+            >
+              posts
+            </Typography>
+            <Typography color="text.secondary">
+              made by you on this platform
+            </Typography>
           </Box>
           <Divider />
         </Box>
-        <Box pl={36} pt={1}>
+        <Box pl={36} pt={2}>
           <CardPost {...cardWidth} />
         </Box>
       </Box>

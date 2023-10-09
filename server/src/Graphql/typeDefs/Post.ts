@@ -3,13 +3,14 @@ import { gql } from "graphql-tag";
 export default gql`
   #_______________scalars________________
   scalar MongoId
+  scalar Date
 
   # _______________Queries______________
   extend type Query {
-    GetAllPosts: [PostInfo!]!
-    DeletePost(PostId: String!): postResponse!
-    PostLikes: [likesResponse!]!
-    PostComments: [commentsResponse!]!
+    AllPosts(cursor: String, limit: Int!): Posts!
+    PostLikes: [Likes!]!
+    PostComments: [Comments!]!
+    SinglePost(PostId: ID!): PostInfo
   }
 
   #_______________Mutations_______________
@@ -18,9 +19,14 @@ export default gql`
     EditPost(editData: editPost!): postResponse!
     User(Online: OnlineUser): postResponse
     PostLikes(likesData: likesData!): Likes
-    PostComments(commentsData: commentsData!): postResponse
+    PostComments(commentsData: commentsData!): Comments
+    DeletePost(PostId: String!): postResponse!
     Retweet(retweetData: retweetData!): postResponse!
     Share(shareData: shareData!, picture: Upload): postResponse
+    SharePostWithGroup(
+      retweetData: retweetData!
+      GroupInfo: GroupInfo
+    ): postResponse
   }
 
   #______________inputs___________________
@@ -29,6 +35,14 @@ export default gql`
     PostId: String!
     PostReference: String!
     User: ID
+    isRetweeted: Boolean
+    RetweetedPost: MongoId
+  }
+
+  input GroupInfo {
+    GroupId: [ID!]!
+    GroupName: String
+    sharedPostId: ID!
   }
 
   input editPost {
@@ -53,7 +67,6 @@ export default gql`
     PostId: String!
     Body: String!
     CommentReference: String!
-    Post: String!
     User: String!
   }
 
@@ -69,7 +82,7 @@ export default gql`
     PostId: String!
     From: String!
     To: String!
-    ShareDestination: String!
+    Image: String
   }
 
   #__________________types________________
@@ -80,30 +93,27 @@ export default gql`
     Image: String
   }
 
-  type likesResponse {
-    _id: MongoId!
-    PostId: String!
-    Preference: String
-  }
-
-  type commentsResponse {
-    _id: MongoId!
-    PostId: String!
-    CommentReference: String!
-    Post: PostInfo!
-    User: User!
-  }
-
   type Likes {
     _id: MongoId
-    PostId: ID!
+    PostId: String
     User: User
   }
 
-  type comments {
+  type Comments {
     _id: MongoId
-    PostId: ID!
+    PostId: String
+    Body: String
+    CommentReference: String
     User: User
+    createdAt: Date
+  }
+
+  type retweetedPost {
+    _id: MongoId
+    PostImage: String
+    Title: String
+    User: User
+    createdAt: Date
   }
 
   type PostInfo {
@@ -111,12 +121,18 @@ export default gql`
     PostId: String!
     PostImage: String
     PublicId: String
-    Comments: [comments]
     Title: String
-    Likes: [Likes]
     User: User
-    createdAt: String
-    updatedAt: String
+    isGroup: Boolean
+    isRetweeted: Boolean
+    RetweetedPost: retweetedPost
+    createdAt: Date
+  }
+
+  type Posts {
+    Posts: [PostInfo!] @cacheControl(maxAge: 20)
+    cursor: String
+    hasNextPage: Boolean
   }
 
   type postResponse {

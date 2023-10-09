@@ -1,15 +1,12 @@
 import { prop } from "@typegoose/typegoose";
 
 export class NotiEngine {
-  @prop({ type: () => String, required: true })
-  public reference!: string;
-
   @prop({ type: () => String, required: false })
-  public groupName?: string;
+  public GroupName?: string;
 
   @prop({ type: () => String, required: false })
   public NotiText?: string;
 
-  @prop({ type: () => String, required: false })
+  @prop({ type: () => String, required: false, trm: true })
   public NotiImage?: string;
 }

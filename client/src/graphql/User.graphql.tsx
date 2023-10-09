@@ -1,5 +1,6 @@
 import { gql } from "@apollo/client";
 
+/*-------------------->Queries<----------------------*/
 const USER_CONNECTION = gql`
   query connection($connectionInfo: connectionInfo!) {
     Connection(connectionInfo: $connectionInfo) {
@@ -36,18 +37,9 @@ const Get_UserData = gql`
   }
 `;
 
-const Change_Profile = gql`
-  mutation Change_User_Profile($file: Upload!, $id: String!) {
-    ChangeProfile(file: $file, _id: $id) {
-      message
-      success
-    }
-  }
-`;
-
 const ALL_USERS = gql`
-  query AllUser {
-    allUsers {
+  query AllUser($allUsersId: ID!) {
+    allUsers(_id: $allUsersId) {
       _id
       Email
       Firstname
@@ -74,10 +66,87 @@ const ALL_USERS = gql`
   }
 `;
 
+const USER_STATISTICS = gql`
+  query UserStatistics($userStaticsUserId: ID!) {
+    userStatics(userID: $userStaticsUserId) {
+      follower
+      following
+      posts
+    }
+  }
+`;
+
+/*-------------------->MUTATIONS<-----------------------*/
+const CHANGE_USER_PROFILE = gql`
+  mutation Change_User_Profile(
+    $changeUserProfileFile: Upload!
+    $changeUserProfileId: String!
+  ) {
+    ChangeUserProfile(file: $changeUserProfileFile, _id: $changeUserProfileId) {
+      message
+      success
+    }
+  }
+`;
+
+const CHANGE_COVER_IMAGE = gql`
+  mutation Change_Cover($file: Upload!, $changeCoverId2: String!) {
+    ChangeCover(file: $file, _id: $changeCoverId2) {
+      message
+      success
+    }
+  }
+`;
+
+const LOG_OUT = gql`
+  mutation LogOut {
+    LogOut {
+      message
+      success
+    }
+  }
+`;
+
+const ONLINE_OFFLINE_STATUS = gql`
+  mutation OnlineOfflineStatus(
+    $onlineOfflineStatusUserId: ID!
+    $online: Boolean!
+  ) {
+    OnlineOfflineStatus(userId: $onlineOfflineStatusUserId, online: $online) {
+      message
+      success
+    }
+  }
+`;
+
+const CHANGE_PASSWORD = gql`
+  mutation ChangePassword($userEmail: String!, $newPassword: String!) {
+    ChangePassword(userEmail: $userEmail, newPassword: $newPassword) {
+      message
+      success
+    }
+  }
+`;
+
+const SEND_MAIL = gql`
+  mutation SendMail($mail: Mail!, $code: String!) {
+    SendMail(mail: $mail, code: $code) {
+      message
+      success
+    }
+  }
+`;
+
 export {
   USER_CONNECTION,
   USER_REGISTERATION,
   Get_UserData,
-  Change_Profile,
+  CHANGE_USER_PROFILE,
   ALL_USERS,
+  CHANGE_COVER_IMAGE,
+  LOG_OUT,
+  ONLINE_OFFLINE_STATUS,
+  CHANGE_PASSWORD,
+  SEND_MAIL,
+  USER_STATISTICS,
 };

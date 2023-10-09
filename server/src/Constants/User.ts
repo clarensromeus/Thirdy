@@ -1,0 +1,3 @@
+const UNAUTHORIZED: string = "UNAUTHORIZED";
+
+export { UNAUTHORIZED };

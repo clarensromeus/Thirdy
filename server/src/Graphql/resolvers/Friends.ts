@@ -2,19 +2,33 @@ import lodash from "lodash";
 import { userModel, friendModel } from "../../Models/index.ts";
 import { Resolvers } from "../../__generate__/types.ts";
 
-const { isNil, pick, merge, property, map } = lodash;
+const { isNil, pick, merge, property, map, sample, filter, propertyOf } =
+  lodash;
 
 const Friends: Resolvers = {
   Query: {
-    TestUser: async () => {
+    randomFriendRequest: async (__, { AcceptedId }) => {
       try {
-        const allUser = await userModel.countDocuments();
+        // make a quest of all friends from friend collection
+        const allFriends = await friendModel.countDocuments();
 
-        // Grab a random user
-        var random = Math.floor(Math.random() * allUser);
-        const randomUser = await userModel.findOne().skip(random);
+        const userRelatedRequest = await friendModel
+          .find()
+          .populate({ path: "User", select: "_id Firstname Lastname Image" })
+          .where({
+            UserReceiverId: AcceptedId,
+            AcceptedId: { $ne: AcceptedId },
+          });
 
-        return randomUser;
+        // grab a random friend request
+        const randomization = sample(userRelatedRequest);
+        if (
+          typeof randomization === "undefined" ||
+          typeof randomization === null
+        )
+          return {};
+
+        return randomization;
       } catch (error) {
         throw new Error(`${error}`);
       }
@@ -22,8 +36,16 @@ const Friends: Resolvers = {
     AllFriends: async (__, { _id }) => {
       try {
         const friends = await friendModel
-          .find({ AcceptedId: _id })
-          .populate("User");
+          .find()
+          .populate({ path: "User", select: "_id Firstname Lastname Image" })
+          .populate({
+            path: "Receiver",
+            select: "_id Firstname Lastname Image",
+          })
+          .where({
+            $or: [{ UserReceiverId: _id }, { RequestId: _id }],
+          })
+          .and([{ AcceptedId: { $ne: undefined || null } }]);
 
         return friends;
       } catch (error) {
@@ -158,12 +180,7 @@ const Friends: Resolvers = {
         // push the friend id reference to the active user array of friends
         await userModel
           .findOneAndUpdate({ $push: { Friends: friendId } })
-          .where({ _id: AcceptedId });
-
-        // push the active user id reference to the friend user array of friends
-        await userModel
-          .findOneAndUpdate({ $push: { Friends: friendId } })
-          .where({ _id: userRequestId });
+          .where({ _id: { $in: [AcceptedId, userRequestId] } });
 
         return {
           message: "request accepted",
@@ -173,11 +190,15 @@ const Friends: Resolvers = {
         throw new Error(`${error}`);
       }
     },
-    unFollow: async (__, { userId, friendId }) => {
+    unFollow: async (__, { userId, friendId, _id }) => {
       try {
         const unfollow = await friendModel
           .findOneAndDelete()
           .where({ AcceptedId: userId, RequestId: friendId });
+
+        await userModel
+          .find({ $pull: { Friends: _id } })
+          .where({ _id: { $in: [userId, friendId] } });
 
         if (!unfollow) {
           return {

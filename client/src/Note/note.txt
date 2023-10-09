@@ -1,0 +1,14 @@
+ const authLink: ApolloLink = setContext((_, { headers }) => {
+  // get the authentication token from local storage if it exists
+  const token = localStorage.getItem("TOKEN");
+  // return the headers to the context so httpLink can read them
+  return {
+    headers: {
+      ...headers,
+      authorization: token ? `Bearer ${token}` : "",
+    },
+  };
+}); 
+
+// the down-to-the-T strategy to add headers in apollo client 
+// while connected with apollo server

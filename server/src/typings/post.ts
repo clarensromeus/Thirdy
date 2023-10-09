@@ -9,6 +9,12 @@ interface IpostContext {
   postModel: ReturnModelType<typeof Post>;
 }
 
+interface IPagination {
+  hasNext: boolean;
+  nextCursor: string | undefined;
+  lastPost: string;
+}
+
 interface IPost {
   _id: string;
   PostId: string;
@@ -22,4 +28,4 @@ interface IPost {
   createdAt?: String;
   updateAt?: String;
 }
-export { IpostContext };
+export { IpostContext, IPagination };

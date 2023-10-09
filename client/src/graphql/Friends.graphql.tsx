@@ -22,13 +22,35 @@ const ALL_FRIENDS = gql`
       _id
       RequestId
       AcceptedId
-      createdAt
-      User {
+      Receiver {
         _id
         Firstname
         Lastname
         Image
       }
+      User {
+        _id
+        Lastname
+        Firstname
+        Image
+      }
+    }
+  }
+`;
+
+const RANDOM_FRIEND_REQUEST = gql`
+  query RandomFriendRequest($acceptedId: ID!) {
+    randomFriendRequest(AcceptedId: $acceptedId) {
+      _id
+      RequestId
+      AcceptedId
+      User {
+        _id
+        Image
+        Firstname
+        Lastname
+      }
+      createdAt
     }
   }
 `;
@@ -71,8 +93,8 @@ const FOLLOW_FRIENDS_BACK = gql`
 `;
 
 const UNFOLLOW_FRIENDS = gql`
-  mutation unFollow($userId: ID!, $unFollowFriendId: ID!) {
-    unFollow(userId: $userId, friendId: $unFollowFriendId) {
+  mutation unFollow($unFollowUserId: ID!, $friendId: ID!, $unFollowId: ID) {
+    unFollow(userId: $unFollowUserId, friendId: $friendId, _id: $unFollowId) {
       message
       success
     }
@@ -96,4 +118,5 @@ export {
   ALL_FRIENDS,
   UNFOLLOW_FRIENDS,
   REJECT_REQUEST,
+  RANDOM_FRIEND_REQUEST,
 };

@@ -1,10 +1,18 @@
+// internal imports of resources
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
-// external imports of ressources
+// external imports of resources
+import grey from "@mui/material/colors/grey";
+import CssBaseline from "@mui/material/CssBaseline";
+import ScopedCssBaseline from "@mui/material/ScopedCssBaseline";
+import CloseIcon from "@mui/icons-material/Close";
 import { RecoilRoot } from "recoil";
 import { split } from "@apollo/client";
-import { getMainDefinition } from "@apollo/client/utilities";
+import {
+  getMainDefinition,
+  relayStylePagination,
+} from "@apollo/client/utilities";
 import {
   ApolloProvider,
   InMemoryCache,
@@ -13,15 +21,34 @@ import {
   from,
   ApolloLink,
 } from "@apollo/client";
+import {
+  SnackbarProvider,
+  MaterialDesignContent,
+  closeSnackbar,
+} from "notistack";
 import { RetryLink } from "@apollo/client/link/retry";
 import { setContext } from "@apollo/client/link/context";
 import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
 import { createClient } from "graphql-ws";
-// internally crafted imports of ressources
+import IconButton from "@mui/material/IconButton";
+import { styled } from "@mui/material/styles";
+// internally crafted imports of resources
 import createUploadLink from "apollo-upload-client/public/createUploadLink.js";
 import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
+import { Authentication } from "./Global/GlobalAuth";
+
+// noti stack global style overriding
+const StyledMaterialDesignContent = styled(MaterialDesignContent)(() => ({
+  "&.notistack-MuiContent-success": {
+    backgroundColor: "#ffffff",
+  },
+
+  "&.notistack-MuiContent-error": {
+    backgroundColor: "#ffffff",
+  },
+}));
 
 const uploadLink: ApolloLink = createUploadLink({
   uri: "http://localhost:5000/graphql",
@@ -37,7 +64,7 @@ const wsLink: GraphQLWsLink = new GraphQLWsLink(
   createClient({
     url: "ws://localhost:5000/graphql",
     connectionParams: {
-      authentication: token ? `Bearer ${token}` : "",
+      authentication: token ? `${token}` : "",
     },
     lazy: true,
   })
@@ -69,22 +96,40 @@ const retryLink: RetryLink = new RetryLink({
   },
 });
 
-const authLink: ApolloLink = setContext((_, { headers }) => {
-  // get the authentication token from local storage if it exists
-  const token = localStorage.getItem("TOKEN");
-  // return the headers to the context so httpLink can read them
-  return {
-    headers: {
-      ...headers,
-      authorization: token ? `Bearer ${token}` : "",
-    },
-  };
-});
-
 // initialize ApolloClient and add configuration within its constructor
 const client: ApolloClient<NormalizedCacheObject> = new ApolloClient({
-  link: from([authLink, splitLink, retryLink]),
-  cache: new InMemoryCache(),
+  link: from([splitLink, retryLink]),
+  cache: new InMemoryCache({
+    typePolicies: {
+      Query: {
+        fields: {
+          AllPosts: {
+            keyArgs: false,
+            merge: (existing, incoming) => {
+              if (!incoming) {
+                return existing;
+              }
+              return {
+                ...existing,
+                ...incoming,
+              };
+            },
+          },
+          isLoggedIn: {
+            read(__) {
+              const isUserTokenExist = window.localStorage.getItem("TOKEN");
+              // if user is not yet authenticated  return isLoggedIn false
+              if (!isUserTokenExist) {
+                return Authentication({ isLoggedIn: false });
+              }
+              // if user is authenticated return isLoggedIn true
+              return Authentication({ isLoggedIn: true });
+            },
+          },
+        },
+      },
+    },
+  }),
   connectToDevTools: true,
 });
 
@@ -95,9 +140,25 @@ root.render(
   <React.StrictMode>
     <ApolloProvider client={client}>
       <BrowserRouter>
-        <RecoilRoot>
-          <App />
-        </RecoilRoot>
+        <SnackbarProvider
+          disableWindowBlurListener // for closing snack out of window focus
+          iconVariant={{
+            success: "✅",
+          }}
+          action={(snackbarId) => (
+            <IconButton onClick={() => closeSnackbar(snackbarId)}>
+              <CloseIcon sx={{ color: grey[600] }} />
+            </IconButton>
+          )}
+          Components={{
+            success: StyledMaterialDesignContent,
+            error: StyledMaterialDesignContent,
+          }}
+        >
+          <RecoilRoot>
+            <App />
+          </RecoilRoot>
+        </SnackbarProvider>
       </BrowserRouter>
     </ApolloProvider>
   </React.StrictMode>

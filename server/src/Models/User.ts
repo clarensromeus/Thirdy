@@ -4,12 +4,13 @@ import {
   modelOptions,
   Ref,
 } from "@typegoose/typegoose";
-// internally crafted imports of ressources
+// internally crafted imports of resources
 import { Post } from "./Post.ts";
 import { Chat } from "./Chat.ts";
 import { Friend } from "./Friends.ts";
 import { Group } from "./Groups.ts";
 import { CoverPicture } from "./CoverPicture.ts";
+import { Status } from "./Status.ts";
 
 // parse the collection name and timestamp to generate createdAt and updateAt field in the db
 @modelOptions({ schemaOptions: { collection: "users", timestamps: true } })
@@ -35,6 +36,9 @@ class User {
   @prop({ type: () => String, required: false })
   public PublicId?: string;
 
+  @prop({ type: () => Boolean, required: true, default: false })
+  public IsOnline!: string;
+
   @prop({ type: () => CoverPicture, required: false })
   public CoverImage?: CoverPicture;
 
@@ -55,6 +59,9 @@ class User {
 
   @prop({ ref: () => Post, required: false })
   public Posts?: Ref<Post>[];
+
+  @prop({ ref: () => Status, required: false })
+  public userStatus?: Ref<Status>[];
 }
 
 const userModel = getModelForClass(User);

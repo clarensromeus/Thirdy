@@ -12,14 +12,34 @@ import {
 } from "@mui/material";
 import { uniqueId } from "lodash";
 import EditNotificationsIcon from "@mui/icons-material/EditNotifications";
+import { useRecoilValue } from "recoil";
 import SearchIcon from "@mui/icons-material/Search";
+import { isEqual } from "lodash";
 import blue from "@mui/material/colors/blue";
 import { CssTextFieldShare } from "../MuiStyles/textField";
-import { isEqual } from "lodash";
-// internally crafted imports of ressources
+import grey from "@mui/material/colors/grey";
+// internally crafted imports of resources
 import { INotiPopperProps } from "../typings/Notifications";
+import modeContext from "../store/ModeContext";
+import { IMode } from "../typings/GlobalState";
+import useNotification from "../hooks/useNotifications";
+import Context from "../store/ContextApi";
+import { IAuthState } from "../typings/GlobalState";
 
 const NotiPopper = ({ openNoti, anchorElNoti }: INotiPopperProps) => {
+  // global app state
+  const contextData = React.useContext(Context);
+  const AuthInfo = useRecoilValue<Partial<IAuthState>>(contextData.GetAuthInfo);
+
+  // global app mode
+  const modeContextData = React.useContext(modeContext);
+  const mode = useRecoilValue<IMode>(modeContextData.GetMode);
+
+  // notification handlers
+  const { ReadNotification, DeleteNotification } = useNotification(
+    `${AuthInfo.Data?._id}`
+  );
+
   const fakeNotifications: {
     Firstname: string;
     Lastname: string;
@@ -100,8 +120,17 @@ const NotiPopper = ({ openNoti, anchorElNoti }: INotiPopperProps) => {
                 <Typography fontWeight="700" fontSize="24px">
                   Notifications
                 </Typography>
-                <IconButton sx={{ bgcolor: "#E8F0FE", borderRadius: 50 }}>
-                  <EditNotificationsIcon sx={{ color: "black" }} />
+                <IconButton
+                  sx={{
+                    bgcolor: isEqual(mode.mode, "light") ? "white" : "black",
+                    borderRadius: 50,
+                  }}
+                >
+                  <EditNotificationsIcon
+                    sx={{
+                      color: isEqual(mode.mode, "light") ? "black" : "white",
+                    }}
+                  />
                 </IconButton>
               </Box>
               <Box
@@ -114,7 +143,18 @@ const NotiPopper = ({ openNoti, anchorElNoti }: INotiPopperProps) => {
                     placeholder="search..."
                     size="small"
                     fullWidth
-                    sx={{ "& fieldset": { border: "none" } }}
+                    sx={{
+                      "& fieldset": { border: "none" },
+                      ".MuiOutlinedInput-root": {
+                        bgcolor: isEqual(mode.mode, "light")
+                          ? "#E8F0FE"
+                          : "rgba(255,255, 255, 0.1)",
+                        borderRadius: 50,
+                        color: isEqual(mode.mode, "light")
+                          ? grey[700]
+                          : grey[200],
+                      },
+                    }}
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
@@ -154,6 +194,7 @@ const NotiPopper = ({ openNoti, anchorElNoti }: INotiPopperProps) => {
                       sx={{
                         height: "100%",
                         display: "flex",
+                        gap: 0.7,
                         alignItems: isEqual(Notiref, "request")
                           ? "flex-start"
                           : "center",
@@ -188,11 +229,13 @@ const NotiPopper = ({ openNoti, anchorElNoti }: INotiPopperProps) => {
                               ? "commented your post"
                               : isEqual(Notiref, "messaged")
                               ? "messaged you"
-                              : "sent you a friend request"}
+                              : "sent you a friend request"}{" "}
                             {isEqual(Notiref, "shared") && (
                               <span
                                 style={{
-                                  color: "black",
+                                  color: isEqual(mode.mode, "light")
+                                    ? "black"
+                                    : "white",
                                   fontWeight: "600",
                                   fontSize: "15px",
                                 }}
@@ -240,7 +283,14 @@ const NotiPopper = ({ openNoti, anchorElNoti }: INotiPopperProps) => {
                             <Box>
                               <Button
                                 variant="contained"
-                                sx={{ fontWeight: "bold", boxShadow: "none" }}
+                                sx={{
+                                  fontWeight: "bold",
+                                  boxShadow: "none",
+                                  bgcolor: isEqual(mode.mode, "light")
+                                    ? "primary"
+                                    : "#0866ff",
+                                  color: "white",
+                                }}
                                 fullWidth
                               >
                                 Accept
@@ -249,10 +299,22 @@ const NotiPopper = ({ openNoti, anchorElNoti }: INotiPopperProps) => {
                             <Box>
                               <Button
                                 variant="contained"
-                                sx={{ bgcolor: "#E8F0FE", boxShadow: "none" }}
+                                sx={{
+                                  bgcolor: isEqual(mode.mode, "light")
+                                    ? "#E8F0FE"
+                                    : "rgba(255, 255, 255, 0.1)",
+                                  boxShadow: "none",
+                                }}
                                 fullWidth
                               >
-                                <Typography fontWeight="bold" color="primary">
+                                <Typography
+                                  fontWeight="bold"
+                                  color={
+                                    isEqual(mode.mode, "light")
+                                      ? "primary"
+                                      : "white"
+                                  }
+                                >
                                   Reject
                                 </Typography>
                               </Button>

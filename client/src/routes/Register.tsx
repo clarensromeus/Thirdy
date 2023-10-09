@@ -110,7 +110,8 @@ const Register = () => {
           // and store token in the browser
           if (data.Registeration.success) {
             localStorage.setItem("TOKEN", `${data.Registeration.token}`);
-            navigate("/dashboard");
+            localStorage.setItem("MODE", JSON.stringify("light"));
+            navigate("/thirdy");
           }
           setInfo({
             message: `${data.Registeration.message}`,
@@ -127,7 +128,7 @@ const Register = () => {
   return (
     <>
       {isAuth ? (
-        <Navigate to="/dashboard" replace />
+        <Navigate to="/thirdy" replace />
       ) : (
         <Container>
           <Snackbar

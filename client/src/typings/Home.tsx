@@ -16,4 +16,10 @@ interface IMenuProfile {
   Icon: React.ReactElement;
 }
 
-export type { IDrawer, IContact, IMenuProfile };
+interface ICommentProps {
+  state: boolean;
+  setState: React.Dispatch<React.SetStateAction<boolean>>;
+  PostId: string;
+}
+
+export type { IDrawer, IContact, IMenuProfile, ICommentProps };

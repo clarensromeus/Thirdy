@@ -2,11 +2,11 @@
 import { ApolloServer } from "@apollo/server";
 import { expressMiddleware } from "@apollo/server/express4";
 import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHttpServer";
+import { ApolloServerPluginUsageReporting } from "@apollo/server/plugin/usageReporting";
 import * as mongoose from "mongoose";
 import express, { Express } from "express";
 import http from "http";
 import { join } from "path";
-import { PubSub } from "graphql-subscriptions";
 import cors from "cors";
 import bodyParser from "body-parser";
 import consola from "consola";
@@ -15,28 +15,21 @@ import { fileURLToPath } from "url";
 import { dirname } from "path";
 import { createServer } from "http";
 import { makeExecutableSchema } from "@graphql-tools/schema";
+import jwt from "jsonwebtoken";
 import { WebSocketServer } from "ws";
 import { useServer } from "graphql-ws/lib/use/ws";
-// externally crafted imports of ressources
+// internally crafted imports of resources
 import { PORT } from "./Config/index.ts";
 import { typeDefs, resolvers } from "./Graphql/index.ts";
 import { URL } from "./Constants/index.ts";
 import * as DB_Model from "./Models/index.ts";
-import ReadToken from "./Utils/ReadToken.ts";
-import { RequestWithUserRole } from "./typings/Auth.ts";
 import { REDIS_CLIENT } from "./Constants/Redis.ts";
-
-interface MyContext {
-  user: RequestWithUserRole["user"];
-  isAuth: RequestWithUserRole["isAuth"];
-  [K: string]: any;
-}
+import { ACCESS_TOKEN } from "./Config/index.ts";
+import { userModel } from "./Models/User.ts";
+import { IGetInfo } from "./typings/Auth.ts";
 
 const __filename: string = fileURLToPath(import.meta.url);
 const __dirname: string = dirname(__filename);
-
-// initializing Pubsub for executing asynchronous Graphql operations
-const pubSub: PubSub = new PubSub();
 
 // create express instance
 const app: Express = express();
@@ -61,11 +54,44 @@ const serverCleanup = useServer(
       // Returning an object will add that information to
       // contextValue, which all of our resolvers have access to.
       if (ctx.connectionParams?.authentication) {
-        const user = ReadToken(`${ctx.connectionParams?.Authentication}`);
-        return { pubSub, user };
+        // grab the token from the client
+        const token = ctx.connectionParams.authentication;
+
+        if (!token)
+          return {
+            isAuth: false,
+          };
+
+        // if token exists decode it
+        const DecodedToken = (await jwt.verify(
+          `${token}`,
+          `${ACCESS_TOKEN}`
+        )) as Pick<IGetInfo<string>, "_id">;
+
+        // a bad token is provided by the client
+        // restrict the user permission on requests performed by subscription
+        if (!DecodedToken)
+          return {
+            isAuth: false,
+          };
+
+        // check the user existence in the user document from Atlas db
+        const user = await userModel
+          .findOne()
+          .where({ _id: DecodedToken._id })
+          .select("_id Firstname Lastname");
+
+        if (!user)
+          return {
+            isAuth: false,
+          };
+
+        // allow all permission if the client is successfully authenticated
+        return { isAuth: true, user };
       }
 
-      return { pubSub };
+      // token is not provided display an authorized client
+      return { isAuth: false };
     },
   },
   wsServer
@@ -89,6 +115,14 @@ const server = new ApolloServer({
         };
       },
     },
+
+    // apollo Studio ignores all errors in the stack trace
+    // we can bypass that configuration only by using this plugin
+    ApolloServerPluginUsageReporting({
+      // If you pass unmodified: true to the usage reporting
+      // plugin, Apollo Studio receives ALL error details
+      sendErrors: { unmodified: true },
+    }),
   ],
 });
 
@@ -126,64 +160,3 @@ const LaunchServer = async (): Promise<void> => {
 };
 
 LaunchServer();
-
-// initialiize the express instance
-/* const app: Express = express();
-
-const httpServer: http.Server<
-  typeof http.IncomingMessage,
-  typeof http.ServerResponse
-> = http.createServer(app); */
-
-/* const server = new ApolloServer<MyContext>({
-  typeDefs,
-  resolvers,
-  csrfPrevention: true, // make file upload secure and unvulnerable
-  // for proper server shutdown
-  plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
-});
-await server.start();
-
-// create a static file for assets coming from image upload
-app.use(express.static(join(__dirname, "./Uploads")));
-app.use(ReadToken);
-app.use(
-  "/graphql",
-  cors<cors.CorsRequest>({
-    origin: ["http://localhost:3000", "https://studio.apollographql.com"],
-    credentials: true, // access-control-allow-credentials:true[]
-  }),
-  bordyParser.json(),
-  graphqlUploadExpress({ maxFileSize: 10000000, maxFiles: 10 }),
-  expressMiddleware(server, {
-    context: async ({ req }) => {
-      const { user, isAuth }: RequestWithUserRole = await req;
-      return {
-        user,
-        isAuth,
-        ...DB_Model,
-      };
-    },
-  })
-); */
-
-/* const LaunchServer = async (): Promise<void> => {
-  try {
-    // database connection using mongoose
-    await mongoose.connect(URL);
-    // redis db connection
-    await REDIS_CLIENT.connect();
-    // message to display if db is successfully connected
-    consola.success({ badge: true, message: "DB successfully connected" });
-    await httpServer.listen({ port: PORT }, () =>
-      consola.success({
-        badge: true,
-        message: `🚀 Server ready at http://localhost:${PORT}/graphql`,
-      })
-    );
-  } catch (error) {
-    throw new Error(`${error}`);
-  }
-};
-
-LaunchServer(); */

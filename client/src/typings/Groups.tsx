@@ -1,5 +1,5 @@
 interface IActions {
-  Icon: React.ReactElement;
+  Icon: any;
   Title: string;
 }
 
