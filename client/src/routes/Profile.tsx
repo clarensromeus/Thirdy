@@ -29,6 +29,7 @@ import modeContext from "../store/ModeContext";
 import { IMode } from "../typings/GlobalState";
 import { isEqual } from "lodash";
 import { ICard } from "../typings/Notifications";
+import ProfileCard from "../components/ProfileCard";
 
 const Profile = () => {
   const contextData = React.useContext(Context);
@@ -294,7 +295,7 @@ const Profile = () => {
             }}
           >
             <Typography fontWeight="bold" sx={{ color: blue[800] }}>
-              {data?.userStatics?.posts}
+              {data?.userStatics?.posts?.length}
             </Typography>
             <Typography
               fontWeight="bold"
@@ -309,7 +310,7 @@ const Profile = () => {
           <Divider />
         </Box>
         <Box pl={36} pt={2}>
-          <CardPost {...cardWidth} />
+          <ProfileCard {...cardWidth} />
         </Box>
       </Box>
     </>

@@ -1,6 +1,10 @@
 import { gql } from "graphql-tag";
 
 export default gql`
+  #_______________Scalars____________________
+  scalar MongoId
+  scalar Date
+
   #______________Queries____________________
   extend type Query {
     userStatics(userID: ID!): Statics
@@ -26,12 +30,6 @@ export default gql`
     success: Boolean!
   }
 
-  type Statics {
-    follower: Int
-    following: Int
-    posts: Int!
-  }
-
   type userInfo {
     _id: MongoId @cacheControl(maxAge: 40, scope: PRIVATE)
     Firstname: String!
@@ -49,6 +47,26 @@ export default gql`
     Firstname: String
     Lastname: String
     Image: String
+  }
+
+  type userPosts {
+    _id: MongoId
+    PostId: String!
+    PostImage: String
+    PublicId: String
+    Title: String
+    User: User
+    isSeen: Boolean
+    isGroup: Boolean
+    isRetweeted: Boolean
+    RetweetedPost: retweetedPost
+    createdAt: Date
+  }
+
+  type Statics {
+    follower: Int
+    following: Int
+    posts: [userPosts!]
   }
 
   type friend {

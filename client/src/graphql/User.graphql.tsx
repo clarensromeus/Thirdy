@@ -71,7 +71,35 @@ const USER_STATISTICS = gql`
     userStatics(userID: $userStaticsUserId) {
       follower
       following
-      posts
+      posts {
+        _id
+        isGroup
+        isSeen
+        Title
+        isRetweeted
+        createdAt
+        RetweetedPost {
+          _id
+          PostImage
+          Title
+          User {
+            _id
+            Firstname
+            Lastname
+            Image
+          }
+          createdAt
+        }
+        PostId
+        PostImage
+        PublicId
+        User {
+          _id
+          Firstname
+          Lastname
+          Image
+        }
+      }
     }
   }
 `;

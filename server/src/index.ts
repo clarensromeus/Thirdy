@@ -2,10 +2,11 @@
 import { ApolloServer } from "@apollo/server";
 import { expressMiddleware } from "@apollo/server/express4";
 import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHttpServer";
-import { ApolloServerPluginUsageReporting } from "@apollo/server/plugin/usageReporting";
 import * as mongoose from "mongoose";
+import { ApolloServerErrorCode } from "@apollo/server/errors";
 import express, { Express } from "express";
 import http from "http";
+
 import { join } from "path";
 import cors from "cors";
 import bodyParser from "body-parser";
@@ -100,6 +101,26 @@ const serverCleanup = useServer(
 // Set up ApolloServer.
 const server = new ApolloServer({
   schema,
+  formatError: (formattedError, error) => {
+    // return invalidation error if a query  does not a schema
+    // and many other apollo error enums can be user according
+    // to your need
+    if (
+      formattedError?.extensions?.code ===
+      ApolloServerErrorCode?.GRAPHQL_VALIDATION_FAILED
+    ) {
+      return {
+        ...formattedError,
+        message:
+          "sorry try again and make sure that your query matches your schema",
+      };
+    }
+
+    // Otherwise return the formatted error. This error can also
+    // be manipulated in other ways, as long as it's returned.
+    return formattedError;
+  },
+
   csrfPrevention: true,
   plugins: [
     // Proper shutdown for the HTTP server.
@@ -115,14 +136,6 @@ const server = new ApolloServer({
         };
       },
     },
-
-    // apollo Studio ignores all errors in the stack trace
-    // we can bypass that configuration only by using this plugin
-    ApolloServerPluginUsageReporting({
-      // If you pass unmodified: true to the usage reporting
-      // plugin, Apollo Studio receives ALL error details
-      sendErrors: { unmodified: true },
-    }),
   ],
 });
 

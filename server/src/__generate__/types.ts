@@ -542,7 +542,7 @@ export type Statics = {
   __typename?: 'Statics';
   follower?: Maybe<Scalars['Int']['output']>;
   following?: Maybe<Scalars['Int']['output']>;
-  posts: Scalars['Int']['output'];
+  posts?: Maybe<Array<UserPosts>>;
 };
 
 export type Status = {
@@ -823,6 +823,21 @@ export type UserInfo = {
   _id?: Maybe<Scalars['MongoId']['output']>;
 };
 
+export type UserPosts = {
+  __typename?: 'userPosts';
+  PostId: Scalars['String']['output'];
+  PostImage?: Maybe<Scalars['String']['output']>;
+  PublicId?: Maybe<Scalars['String']['output']>;
+  RetweetedPost?: Maybe<RetweetedPost>;
+  Title?: Maybe<Scalars['String']['output']>;
+  User?: Maybe<User>;
+  _id?: Maybe<Scalars['MongoId']['output']>;
+  createdAt?: Maybe<Scalars['Date']['output']>;
+  isGroup?: Maybe<Scalars['Boolean']['output']>;
+  isRetweeted?: Maybe<Scalars['Boolean']['output']>;
+  isSeen?: Maybe<Scalars['Boolean']['output']>;
+};
+
 
 
 export type ResolverTypeWrapper<T> = Promise<T> | T;
@@ -954,6 +969,7 @@ export type ResolversTypes = {
   suggestions: ResolverTypeWrapper<Suggestions>;
   uploadResponse: ResolverTypeWrapper<UploadResponse>;
   userInfo: ResolverTypeWrapper<UserInfo>;
+  userPosts: ResolverTypeWrapper<UserPosts>;
 };
 
 /** Mapping between all available schema types and the resolvers parents */
@@ -1017,6 +1033,7 @@ export type ResolversParentTypes = {
   suggestions: Suggestions;
   uploadResponse: UploadResponse;
   userInfo: UserInfo;
+  userPosts: UserPosts;
 };
 
 export type CacheControlDirectiveArgs = {
@@ -1205,7 +1222,7 @@ export type ResponseResolvers<ContextType = any, ParentType extends ResolversPar
 export type StaticsResolvers<ContextType = any, ParentType extends ResolversParentTypes['Statics'] = ResolversParentTypes['Statics']> = {
   follower?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
   following?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  posts?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  posts?: Resolver<Maybe<Array<ResolversTypes['userPosts']>>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -1385,6 +1402,21 @@ export type UserInfoResolvers<ContextType = any, ParentType extends ResolversPar
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type UserPostsResolvers<ContextType = any, ParentType extends ResolversParentTypes['userPosts'] = ResolversParentTypes['userPosts']> = {
+  PostId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  PostImage?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  PublicId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  RetweetedPost?: Resolver<Maybe<ResolversTypes['retweetedPost']>, ParentType, ContextType>;
+  Title?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  User?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>;
+  _id?: Resolver<Maybe<ResolversTypes['MongoId']>, ParentType, ContextType>;
+  createdAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
+  isGroup?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
+  isRetweeted?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
+  isSeen?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type Resolvers<ContextType = any> = {
   ChatsIngroup?: ChatsIngroupResolvers<ContextType>;
   Comments?: CommentsResolvers<ContextType>;
@@ -1422,6 +1454,7 @@ export type Resolvers<ContextType = any> = {
   suggestions?: SuggestionsResolvers<ContextType>;
   uploadResponse?: UploadResponseResolvers<ContextType>;
   userInfo?: UserInfoResolvers<ContextType>;
+  userPosts?: UserPostsResolvers<ContextType>;
 };
 
 export type DirectiveResolvers<ContextType = any> = {

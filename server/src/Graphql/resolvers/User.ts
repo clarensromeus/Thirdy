@@ -10,6 +10,8 @@ import { IUser } from "../../typings/Con_Register.ts";
 import GenerateToken from "../../Utils/GenerateToken.ts";
 import RegisterSchema from "../../Validators/Registeration.ts";
 import UploadFile from "../../Service/ImageUpload.ts";
+import MongoId from "../../Service/MongoIdScalar.ts";
+import dateScalar from "../../Service/DataScalar.ts";
 import {
   LoginSchemaWithEmail,
   LoginSchemaWithUsername,
@@ -22,6 +24,7 @@ import { ImageType } from "../../typings/upload.ts";
 import { friendModel, postModel, userModel } from "../../Models/index.ts";
 import { REDIS_CLIENT } from "../../Constants/Redis.ts";
 import { EMAIL_PASS, EMAIL_USER } from "../../Config/index.ts";
+import { IPost } from "../../typings/posts.ts";
 
 const { isNil, isUndefined, nth, isError } = pkg;
 
@@ -33,6 +36,8 @@ const __dirname: string = dirname(__filename);
 const UserResolver: Resolvers = {
   // This maps the Upload scalar to the implementation provided
   // by the graphql-upload package.
+  MongoId,
+  Date: dateScalar,
   Upload: GraphQLUpload,
   Query: {
     userData: async (__, { _id }) => {
@@ -76,15 +81,26 @@ const UserResolver: Resolvers = {
 
         // grab all posts made by the online user
         const posts = await postModel
-          .find()
+          .find<IPost>()
           .where({ User: userID })
-          .select("User")
-          .populate({ path: "User", select: "_id" });
+          .populate({
+            path: "User",
+            select: "_id Firstname Lastname Image",
+          })
+          .populate({
+            path: "RetweetedPost",
+            select: "_id PostId PostImage Title User createdAt",
+            populate: {
+              path: "User",
+              select: "_id Firstname Lastname Image",
+            },
+          })
+          .sort({ _id: -1 });
 
         return {
           follower: user?.Friends?.length,
           following: friends.length,
-          posts: posts.length,
+          posts: posts,
         };
       } catch (error) {
         throw new Error(`${error}`);
@@ -108,7 +124,9 @@ const UserResolver: Resolvers = {
       try {
         const { Username, Password, Email } = await args.connectionInfo;
 
-        const userDbEmail = await userModel.findOne({ Email });
+        const userDbEmail = await userModel
+          .findOne({ Email })
+          .select("-Groups -Chats -Friends -Posts");
         // if user connection preference is Username
         if (
           !isUndefined(Username) &&
@@ -119,14 +137,16 @@ const UserResolver: Resolvers = {
             })
           )
         ) {
-          // split the username to grab firstname and lastname
+          // split the username to grab Firstname and Lastname
           const username: string[] | undefined = Username?.split(" ");
 
           // check out user authentication
-          const userDb = await userModel.findOne({
-            Firstname: `${nth(username, 0)}`,
-            Lastname: `${nth(username, 1)}`,
-          });
+          const userDb = await userModel
+            .findOne({
+              Firstname: `${nth(username, 0)}`,
+              Lastname: `${nth(username, 1)}`,
+            })
+            .select("-Groups -Chats -Friends -Posts");
 
           if (
             !isNil(userDb) &&
@@ -230,10 +250,12 @@ const UserResolver: Resolvers = {
           const { Firstname, Lastname, Password, Email, DOB, Image, Bio, Sex } =
             await args.registerInfo;
 
-          const userDb = await userModel.findOne({
-            Firstname,
-            Lastname,
-          });
+          const userDb = await userModel
+            .findOne({
+              Firstname,
+              Lastname,
+            })
+            .select("-Groups -Chats -Friends -Posts");
 
           const isAuthenticated = await Compare_hash({
             passCode: `${Password}`,
