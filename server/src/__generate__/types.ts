@@ -48,6 +48,7 @@ export type Comments = {
 
 export type Engine = {
   __typename?: 'Engine';
+  FriendRequestID?: Maybe<Scalars['String']['output']>;
   GroupName?: Maybe<Scalars['String']['output']>;
   NotiImage?: Maybe<Scalars['String']['output']>;
   NotiText?: Maybe<Scalars['String']['output']>;
@@ -102,6 +103,7 @@ export type Mutation = {
   OnlineOfflineStatus?: Maybe<Response>;
   PostComments?: Maybe<Comments>;
   PostLikes?: Maybe<Likes>;
+  RefreshToken?: Maybe<TokenResponse>;
   Registeration: Response;
   RemoveAdminRole?: Maybe<GroupResponse>;
   Retweet: PostResponse;
@@ -540,6 +542,7 @@ export type Response = {
 
 export type Statics = {
   __typename?: 'Statics';
+  UserInfo?: Maybe<UserInfo>;
   follower?: Maybe<Scalars['Int']['output']>;
   following?: Maybe<Scalars['Int']['output']>;
   posts?: Maybe<Array<UserPosts>>;
@@ -720,6 +723,7 @@ export type MessageResponse = {
 };
 
 export type NotiEngine = {
+  FriendRequestID?: InputMaybe<Scalars['String']['input']>;
   GroupName?: InputMaybe<Scalars['String']['input']>;
   NotiImage?: InputMaybe<Scalars['String']['input']>;
   NotiText?: InputMaybe<Scalars['String']['input']>;
@@ -804,6 +808,13 @@ export type Suggestions = {
   _id: Scalars['MongoId']['output'];
 };
 
+export type TokenResponse = {
+  __typename?: 'tokenResponse';
+  message?: Maybe<Scalars['String']['output']>;
+  refreshToken?: Maybe<Scalars['String']['output']>;
+  success?: Maybe<Scalars['Boolean']['output']>;
+};
+
 export type UploadResponse = {
   __typename?: 'uploadResponse';
   message: Scalars['String']['output'];
@@ -821,6 +832,7 @@ export type UserInfo = {
   Password?: Maybe<Scalars['String']['output']>;
   Sex: Scalars['String']['output'];
   _id?: Maybe<Scalars['MongoId']['output']>;
+  updatedAt?: Maybe<Scalars['Date']['output']>;
 };
 
 export type UserPosts = {
@@ -967,6 +979,7 @@ export type ResolversTypes = {
   shareData: ShareData;
   statusResponse: ResolverTypeWrapper<StatusResponse>;
   suggestions: ResolverTypeWrapper<Suggestions>;
+  tokenResponse: ResolverTypeWrapper<TokenResponse>;
   uploadResponse: ResolverTypeWrapper<UploadResponse>;
   userInfo: ResolverTypeWrapper<UserInfo>;
   userPosts: ResolverTypeWrapper<UserPosts>;
@@ -1031,6 +1044,7 @@ export type ResolversParentTypes = {
   shareData: ShareData;
   statusResponse: StatusResponse;
   suggestions: Suggestions;
+  tokenResponse: TokenResponse;
   uploadResponse: UploadResponse;
   userInfo: UserInfo;
   userPosts: UserPosts;
@@ -1071,6 +1085,7 @@ export interface DateScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes
 }
 
 export type EngineResolvers<ContextType = any, ParentType extends ResolversParentTypes['Engine'] = ResolversParentTypes['Engine']> = {
+  FriendRequestID?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   GroupName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   NotiImage?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   NotiText?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
@@ -1116,6 +1131,7 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   OnlineOfflineStatus?: Resolver<Maybe<ResolversTypes['Response']>, ParentType, ContextType, RequireFields<MutationOnlineOfflineStatusArgs, 'online' | 'userId'>>;
   PostComments?: Resolver<Maybe<ResolversTypes['Comments']>, ParentType, ContextType, RequireFields<MutationPostCommentsArgs, 'commentsData'>>;
   PostLikes?: Resolver<Maybe<ResolversTypes['Likes']>, ParentType, ContextType, RequireFields<MutationPostLikesArgs, 'likesData'>>;
+  RefreshToken?: Resolver<Maybe<ResolversTypes['tokenResponse']>, ParentType, ContextType>;
   Registeration?: Resolver<ResolversTypes['Response'], ParentType, ContextType, RequireFields<MutationRegisterationArgs, 'registerInfo'>>;
   RemoveAdminRole?: Resolver<Maybe<ResolversTypes['groupResponse']>, ParentType, ContextType, RequireFields<MutationRemoveAdminRoleArgs, 'adminId' | 'groupId' | 'userId'>>;
   Retweet?: Resolver<ResolversTypes['postResponse'], ParentType, ContextType, RequireFields<MutationRetweetArgs, 'retweetData'>>;
@@ -1220,6 +1236,7 @@ export type ResponseResolvers<ContextType = any, ParentType extends ResolversPar
 };
 
 export type StaticsResolvers<ContextType = any, ParentType extends ResolversParentTypes['Statics'] = ResolversParentTypes['Statics']> = {
+  UserInfo?: Resolver<Maybe<ResolversTypes['userInfo']>, ParentType, ContextType>;
   follower?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
   following?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
   posts?: Resolver<Maybe<Array<ResolversTypes['userPosts']>>, ParentType, ContextType>;
@@ -1383,6 +1400,13 @@ export type SuggestionsResolvers<ContextType = any, ParentType extends Resolvers
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type TokenResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['tokenResponse'] = ResolversParentTypes['tokenResponse']> = {
+  message?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  refreshToken?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  success?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type UploadResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['uploadResponse'] = ResolversParentTypes['uploadResponse']> = {
   message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
@@ -1399,6 +1423,7 @@ export type UserInfoResolvers<ContextType = any, ParentType extends ResolversPar
   Password?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   Sex?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   _id?: Resolver<Maybe<ResolversTypes['MongoId']>, ParentType, ContextType>;
+  updatedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -1452,6 +1477,7 @@ export type Resolvers<ContextType = any> = {
   retweetedPost?: RetweetedPostResolvers<ContextType>;
   statusResponse?: StatusResponseResolvers<ContextType>;
   suggestions?: SuggestionsResolvers<ContextType>;
+  tokenResponse?: TokenResponseResolvers<ContextType>;
   uploadResponse?: UploadResponseResolvers<ContextType>;
   userInfo?: UserInfoResolvers<ContextType>;
   userPosts?: UserPostsResolvers<ContextType>;

@@ -14,85 +14,94 @@ import { uniqueId } from "lodash";
 import EditNotificationsIcon from "@mui/icons-material/EditNotifications";
 import { useRecoilValue } from "recoil";
 import SearchIcon from "@mui/icons-material/Search";
-import { isEqual } from "lodash";
+import { isEqual, debounce, size, gt } from "lodash";
+import { useReactiveVar } from "@apollo/client";
 import blue from "@mui/material/colors/blue";
-import { CssTextFieldShare } from "../MuiStyles/textField";
+import { useMutation } from "@apollo/client";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+import { ClipLoader } from "react-spinners";
 import grey from "@mui/material/colors/grey";
 // internally crafted imports of resources
+import { CssTextFieldShare } from "../MuiStyles/textField";
 import { INotiPopperProps } from "../typings/Notifications";
+import {
+  ALL_FRIEND_REQUESTS,
+  FOLLOW_FRIENDS_BACK,
+  FRIEND_SUGGESTIONS,
+  REJECT_REQUEST,
+} from "../graphql/Friends.graphql";
+import {
+  FollowBackMutation,
+  FollowBackMutationVariables,
+  RejectRequestMutation,
+  RejectRequestMutationVariables,
+} from "../__generated__/graphql";
 import modeContext from "../store/ModeContext";
 import { IMode } from "../typings/GlobalState";
 import useNotification from "../hooks/useNotifications";
 import Context from "../store/ContextApi";
 import { IAuthState } from "../typings/GlobalState";
+import { AllNotifications } from "../Global/GlobalNotifications";
+import { GET_NOTIFICATIONS } from "../graphql/Notifications.graphql";
+import { Authentication } from "../Global/GlobalAuth";
+import { NotiReference } from "../Enums";
+
+dayjs.extend(relativeTime);
 
 const NotiPopper = ({ openNoti, anchorElNoti }: INotiPopperProps) => {
   // global app state
   const contextData = React.useContext(Context);
   const AuthInfo = useRecoilValue<Partial<IAuthState>>(contextData.GetAuthInfo);
 
+  const [search, setSearch] = React.useState<string>("");
+
   // global app mode
   const modeContextData = React.useContext(modeContext);
   const mode = useRecoilValue<IMode>(modeContextData.GetMode);
+  const isAuth = useReactiveVar(Authentication);
 
   // notification handlers
-  const { ReadNotification, DeleteNotification } = useNotification(
+  const { CreateNotification, PushNotification } = useNotification(
     `${AuthInfo.Data?._id}`
   );
 
-  const fakeNotifications: {
-    Firstname: string;
-    Lastname: string;
-    Date: string;
-    Image: string;
-    Mutual?: number;
-    Notiref: string;
-    SharedPerson?: string;
-  }[] = [
-    {
-      Firstname: "Jhonny",
-      Lastname: "lewis",
-      Date: "1 day ago",
-      Image:
-        "https://nbcsports.brightspotcdn.com/dims4/default/f2b2842/2147483647/strip/true/crop/1319x742+0+0/resize/1440x810!/quality/90/?url=https%3A%2F%2Fnbc-sports-production-nbc-sports.s3.amazonaws.com%2Fbrightspot%2F1f%2F09%2F684fa77a56585d477fc1e730b388%2Fholden-staes-e1620415067383.jpg",
-      Notiref: "likes",
-    },
-    {
-      Firstname: "Orilla",
-      Lastname: "rosenie",
-      Date: "2 hours ago",
-      Image:
-        "https://i.pinimg.com/236x/c1/5d/02/c15d020633bd1f59d15979ae9219912c.jpg",
-      Notiref: "shared",
-      SharedPerson: "wilvenson doma",
-    },
-    {
-      Firstname: "Darline",
-      Lastname: "viskovic",
-      Date: "1 day ago",
-      Image:
-        "https://justwomenssports.com/wp-content/uploads/2023/02/GettyImages-1246627588-scaled-e1676490670785.jpg",
-      Mutual: 5,
-      Notiref: "request",
-    },
-    {
-      Firstname: "Vandic",
-      Lastname: "puskas",
-      Date: " 1 year ago",
-      Image:
-        "https://www.uvpediatrics.com/wp-content/uploads/2016/08/guiding-your-freshman-college-website-main.jpg",
-      Mutual: 2,
-      Notiref: "request",
-    },
-    {
-      Firstname: "Jhonson",
-      Lastname: "napoleon",
-      Date: "2 years ago",
-      Image:
-        "https://media.istockphoto.com/id/1059661424/photo/mature-mixed-race-business-man.jpg?s=612x612&w=0&k=20&c=UAVBeyoD_LkCh1MzVaWW1SR1iwK-VkPDXWMH2o2wL8M=",
-      Notiref: "messaged",
-    },
-  ];
+  const Notifications = useReactiveVar(AllNotifications);
+
+  const allNotifications = Notifications.Notifications.filter(
+    (notifications) => notifications.ReceiverId === `${AuthInfo.Data?._id}`
+  );
+
+  const [followBack, { loading }] = useMutation<
+    FollowBackMutation,
+    FollowBackMutationVariables
+  >(FOLLOW_FRIENDS_BACK);
+
+  const [RejectFriend, { loading: rejectFriendLoading }] = useMutation<
+    RejectRequestMutation,
+    RejectRequestMutationVariables
+  >(REJECT_REQUEST);
+
+  const handleChangeEvent = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const target = event.target as typeof event.target & {
+      value: { value: string };
+    };
+    setSearch(target.value);
+  };
+
+  const debounceSearchResult = React.useMemo(() => {
+    return debounce(handleChangeEvent, 1000);
+  }, [search]);
+
+  // push real time notifications
+  PushNotification({ isAuth: isAuth.isLoggedIn });
+
+  React.useEffect(() => {
+    return () => {
+      // cleanup debounce for re-rendering prevention
+      debounceSearchResult.cancel();
+    };
+  }, []);
 
   return (
     <>
@@ -143,6 +152,7 @@ const NotiPopper = ({ openNoti, anchorElNoti }: INotiPopperProps) => {
                     placeholder="search..."
                     size="small"
                     fullWidth
+                    onChange={debounceSearchResult}
                     sx={{
                       "& fieldset": { border: "none" },
                       ".MuiOutlinedInput-root": {
@@ -176,155 +186,381 @@ const NotiPopper = ({ openNoti, anchorElNoti }: INotiPopperProps) => {
                   overflow: "auto",
                 }}
               >
-                {fakeNotifications.map((notifications) => {
-                  const {
-                    Firstname,
-                    Lastname,
-                    Image,
-                    Notiref,
-                    Mutual,
-                    Date,
-                    SharedPerson,
-                  } = notifications;
-                  return (
-                    <Box
-                      pt={1}
-                      px={2}
-                      mb={2}
-                      sx={{
-                        height: "100%",
-                        display: "flex",
-                        gap: 0.7,
-                        alignItems: isEqual(Notiref, "request")
-                          ? "flex-start"
-                          : "center",
-                        alignContent: isEqual(Notiref, "request")
-                          ? "flex-start"
-                          : "center",
-                      }}
-                    >
-                      <Box>
-                        <Avatar
-                          alt=""
-                          src={Image}
-                          sx={{ width: 62, height: 62 }}
-                        />
-                      </Box>
-                      <Box sx={{ display: "flex", flexDirection: "column" }}>
-                        <Box sx={{}}>
-                          <Typography
-                            fontWeight="600"
-                            fontSize="15px"
-                            component="span"
-                          >
-                            {Firstname} {Lastname}
-                          </Typography>
-                          <Typography color="text.secondary" component="span">
-                            {" "}
-                            {isEqual(Notiref, "likes")
-                              ? "likes your post"
-                              : isEqual(Notiref, "shared")
-                              ? "shared you post with"
-                              : isEqual(Notiref, "commented")
-                              ? "commented your post"
-                              : isEqual(Notiref, "messaged")
-                              ? "messaged you"
-                              : "sent you a friend request"}{" "}
-                            {isEqual(Notiref, "shared") && (
-                              <span
-                                style={{
-                                  color: isEqual(mode.mode, "light")
-                                    ? "black"
-                                    : "white",
-                                  fontWeight: "600",
-                                  fontSize: "15px",
-                                }}
-                              >
-                                {SharedPerson}
-                              </span>
-                            )}
-                          </Typography>
-                        </Box>
+                {allNotifications
+                  .filter((notifications) =>
+                    search.toLowerCase() === ""
+                      ? notifications
+                      : notifications.SenderInfo?.Firstname?.toLowerCase().includes(
+                          search.toLowerCase()
+                        )
+                  )
+                  .map((notifications) => {
+                    return (
+                      <Box
+                        pt={1}
+                        px={2}
+                        mb={2}
+                        sx={{
+                          height: "100%",
+                          display: "flex",
+                          gap: 1,
+                          alignItems: "flex-start",
+                          alignContent: "flex-start",
+                        }}
+                      >
                         <Box>
-                          <Typography
-                            sx={{
-                              color: blue[700],
-                              fontSize: "14px",
-                              fontWeight: "600",
-                            }}
-                          >
-                            {Date}
-                          </Typography>
+                          <Avatar
+                            alt=""
+                            src={`${notifications.SenderInfo?.Image}`}
+                            sx={{ width: 62, height: 62 }}
+                          />
                         </Box>
-                        {isEqual(Notiref, "request") && (
+                        <Box sx={{ display: "flex", flexDirection: "column" }}>
+                          <Box sx={{}}>
+                            <Typography
+                              fontWeight="600"
+                              fontSize="15px"
+                              component="span"
+                            >
+                              {notifications.SenderInfo?.Firstname}{" "}
+                              {notifications.SenderInfo?.Lastname}
+                            </Typography>
+                            <Typography color="text.secondary" component="span">
+                              {" "}
+                              {isEqual(notifications.NotiReference, "likes")
+                                ? "likes your post"
+                                : isEqual(
+                                    notifications.NotiReference,
+                                    "dislikes"
+                                  )
+                                ? "dislikes your post"
+                                : isEqual(notifications.NotiReference, "shared")
+                                ? "shared your post"
+                                : isEqual(
+                                    notifications.NotiReference,
+                                    "commented"
+                                  )
+                                ? "commented your post"
+                                : isEqual(
+                                    notifications.NotiReference,
+                                    "messaged"
+                                  )
+                                ? "was messaged you"
+                                : isEqual(
+                                    notifications.NotiReference,
+                                    "accepted"
+                                  )
+                                ? "accepted your friend request"
+                                : isEqual(
+                                    notifications.NotiReference,
+                                    "unfollowed"
+                                  )
+                                ? "unfollowed you"
+                                : isEqual(
+                                    notifications.NotiReference,
+                                    "requested"
+                                  )
+                                ? "sent you a friend request"
+                                : isEqual(
+                                    notifications.NotiReference,
+                                    "removedAdminRole"
+                                  )
+                                ? "removes you as admin from"
+                                : isEqual(
+                                    notifications.NotiReference,
+                                    "adminRoleAdded"
+                                  )
+                                ? "add you as admin in"
+                                : isEqual(
+                                    notifications.NotiReference,
+                                    "retweeted"
+                                  )
+                                ? "retweeted your post"
+                                : isEqual(
+                                    notifications.NotiReference,
+                                    "rejected"
+                                  )
+                                ? "rejected your friend request"
+                                : isEqual(notifications.NotiReference, "added")
+                                ? "add you in"
+                                : ""}{" "}
+                              {isEqual(
+                                notifications.NotiReference,
+                                "removed"
+                              ) &&
+                                Boolean(notifications.isGroup) && (
+                                  <span
+                                    style={{
+                                      color: isEqual(mode.mode, "light")
+                                        ? "black"
+                                        : "white",
+                                      fontWeight: "600",
+                                      fontSize: "15px",
+                                    }}
+                                  >
+                                    {notifications.NotiEngine?.GroupName}' group
+                                  </span>
+                                )}
+                              {isEqual(notifications.NotiReference, "added") &&
+                                Boolean(notifications.isGroup) && (
+                                  <span
+                                    style={{
+                                      color: isEqual(mode.mode, "light")
+                                        ? "black"
+                                        : "white",
+                                      fontWeight: "600",
+                                      fontSize: "15px",
+                                    }}
+                                  >
+                                    {notifications.NotiEngine?.GroupName}' group
+                                  </span>
+                                )}
+                              {isEqual(
+                                notifications.NotiReference,
+                                "removedAdminRole"
+                              ) &&
+                                Boolean(notifications.isGroup) && (
+                                  <span
+                                    style={{
+                                      color: isEqual(mode.mode, "light")
+                                        ? "black"
+                                        : "white",
+                                      fontWeight: "600",
+                                      fontSize: "15px",
+                                    }}
+                                  >
+                                    {notifications.NotiEngine?.GroupName}' group
+                                  </span>
+                                )}
+                              {isEqual(
+                                notifications.NotiReference,
+                                "adminRoleAdded"
+                              ) &&
+                                Boolean(notifications.isGroup) && (
+                                  <span
+                                    style={{
+                                      color: isEqual(mode.mode, "light")
+                                        ? "black"
+                                        : "white",
+                                      fontWeight: "600",
+                                      fontSize: "15px",
+                                    }}
+                                  >
+                                    {notifications.NotiEngine?.GroupName}' group
+                                  </span>
+                                )}
+                              {isEqual(
+                                notifications.NotiReference,
+                                "commented"
+                              ) &&
+                                gt(
+                                  size(notifications.NotiEngine?.NotiText),
+                                  0
+                                ) && (
+                                  <span
+                                    style={{
+                                      color: isEqual(mode.mode, "light")
+                                        ? "black"
+                                        : "white",
+                                      fontWeight: "600",
+                                      fontSize: "15px",
+                                    }}
+                                  >
+                                    {notifications.NotiEngine?.NotiText}
+                                  </span>
+                                )}
+                              {isEqual(notifications.NotiReference, "likes") ||
+                                (isEqual(
+                                  notifications.NotiReference,
+                                  "dislikes"
+                                ) &&
+                                  gt(
+                                    size(notifications.NotiEngine?.NotiText),
+                                    0
+                                  ) &&
+                                  Boolean(notifications.isGroup) && (
+                                    <span
+                                      style={{
+                                        color: isEqual(mode.mode, "light")
+                                          ? "black"
+                                          : "white",
+                                        fontWeight: "600",
+                                        fontSize: "15px",
+                                      }}
+                                    >
+                                      {notifications.NotiEngine?.NotiText}
+                                    </span>
+                                  ))}
+                            </Typography>
+                          </Box>
                           <Box>
                             <Typography
-                              color="text.secondary"
                               sx={{
-                                fontSize: "14px",
+                                color: blue[700],
+                                fontSize: "13px",
                                 fontWeight: "600",
                               }}
                             >
-                              {Mutual} mutual friends
+                              {dayjs(`${notifications.createdAt}`).fromNow(
+                                notifications.createdAt
+                              )}
                             </Typography>
                           </Box>
-                        )}
-                        {isEqual(Notiref, "request") && (
-                          <Box
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              alignContent: "center",
-                              gap: 1,
-                              pt: 0.3,
-                              width: "inherit",
-                            }}
-                          >
+                          {isEqual(notifications.NotiReference, "request") && (
                             <Box>
-                              <Button
-                                variant="contained"
+                              <Typography
+                                color="text.secondary"
                                 sx={{
-                                  fontWeight: "bold",
-                                  boxShadow: "none",
-                                  bgcolor: isEqual(mode.mode, "light")
-                                    ? "primary"
-                                    : "#0866ff",
-                                  color: "white",
+                                  fontSize: "14px",
+                                  fontWeight: "600",
                                 }}
-                                fullWidth
                               >
-                                Accept
-                              </Button>
+                                {7} mutual friends
+                              </Typography>
                             </Box>
-                            <Box>
-                              <Button
-                                variant="contained"
-                                sx={{
-                                  bgcolor: isEqual(mode.mode, "light")
-                                    ? "#E8F0FE"
-                                    : "rgba(255, 255, 255, 0.1)",
-                                  boxShadow: "none",
-                                }}
-                                fullWidth
-                              >
-                                <Typography
-                                  fontWeight="bold"
-                                  color={
-                                    isEqual(mode.mode, "light")
+                          )}
+                          {isEqual(notifications.NotiReference, "request") && (
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                alignContent: "center",
+                                gap: 1,
+                                pt: 0.3,
+                                width: "inherit",
+                              }}
+                            >
+                              <Box>
+                                <Button
+                                  variant="contained"
+                                  sx={{
+                                    fontWeight: "bold",
+                                    boxShadow: "none",
+                                    bgcolor: isEqual(mode.mode, "light")
                                       ? "primary"
-                                      : "white"
-                                  }
+                                      : "#0866ff",
+                                    color: "white",
+                                    textTransform: "capitalize",
+                                  }}
+                                  fullWidth
+                                  onClick={() => {
+                                    followBack({
+                                      variables: {
+                                        FriendId: `${notifications.NotiEngine?.FriendRequestID}`,
+                                        userRequestId: `${notifications.SenderInfo?._id}`,
+                                        AcceptedId: `${AuthInfo.Data?._id}`,
+                                      },
+                                      refetchQueries: [
+                                        FRIEND_SUGGESTIONS,
+                                        ALL_FRIEND_REQUESTS,
+                                        GET_NOTIFICATIONS,
+                                      ],
+                                      onCompleted: async () => {
+                                        try {
+                                          await CreateNotification({
+                                            ReceiverId: `${notifications.SenderInfo?._id}`,
+                                            SenderInfo: `${AuthInfo.Data?._id}`,
+                                            isGroup: Boolean(false),
+                                            isSeen: Boolean(false),
+                                            NotiEngine: {
+                                              GroupName: "",
+                                              NotiImage: "",
+                                              NotiText: "accepted your request",
+                                            },
+                                            NotiReference:
+                                              NotiReference.Accepted,
+                                          });
+                                        } catch (error) {
+                                          throw new Error(`${error}`);
+                                        }
+                                      },
+                                    });
+                                  }}
                                 >
-                                  Reject
-                                </Typography>
-                              </Button>
+                                  {loading ? (
+                                    <ClipLoader
+                                      loading={loading}
+                                      size={20}
+                                      color="white"
+                                      aria-label="Loading Spinner"
+                                      data-testid="loader"
+                                    />
+                                  ) : (
+                                    "Accept"
+                                  )}
+                                </Button>
+                              </Box>
+                              <Box>
+                                <Button
+                                  variant="contained"
+                                  sx={{
+                                    bgcolor: isEqual(mode.mode, "light")
+                                      ? "#E8F0FE"
+                                      : "rgba(255, 255, 255, 0.1)",
+                                    boxShadow: "none",
+                                    textTransform: "capitalize",
+                                  }}
+                                  fullWidth
+                                  onClick={() => {
+                                    RejectFriend({
+                                      variables: {
+                                        rejectRequestFriendId: `${notifications.NotiEngine?.FriendRequestID}`,
+                                      },
+                                      refetchQueries: [
+                                        FRIEND_SUGGESTIONS,
+                                        ALL_FRIEND_REQUESTS,
+                                        GET_NOTIFICATIONS,
+                                      ],
+                                      onCompleted: async () => {
+                                        try {
+                                          await CreateNotification({
+                                            ReceiverId: `${notifications.SenderInfo?._id}`,
+                                            SenderInfo: `${AuthInfo.Data?._id}`,
+                                            isGroup: Boolean(false),
+                                            isSeen: Boolean(false),
+                                            NotiEngine: {
+                                              GroupName: "",
+                                              NotiImage: "",
+                                              NotiText:
+                                                "reject your friend request",
+                                            },
+                                            NotiReference: NotiReference.Reject,
+                                          });
+                                        } catch (error) {
+                                          throw new Error(`${error}`);
+                                        }
+                                      },
+                                    });
+                                  }}
+                                >
+                                  <Typography
+                                    fontWeight="bold"
+                                    color={
+                                      isEqual(mode.mode, "light")
+                                        ? "primary"
+                                        : "white"
+                                    }
+                                  >
+                                    {rejectFriendLoading ? (
+                                      <ClipLoader
+                                        loading={rejectFriendLoading}
+                                        size={20}
+                                        color="white"
+                                        aria-label="Loading Spinner"
+                                        data-testid="loader"
+                                      />
+                                    ) : (
+                                      "reject"
+                                    )}
+                                  </Typography>
+                                </Button>
+                              </Box>
                             </Box>
-                          </Box>
-                        )}
+                          )}
+                        </Box>
                       </Box>
-                    </Box>
-                  );
-                })}
+                    );
+                  })}
               </Box>
             </Paper>
           </Fade>

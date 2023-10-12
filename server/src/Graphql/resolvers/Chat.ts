@@ -179,7 +179,7 @@ const Chat: Resolvers = {
   Subscription: {
     Chat: {
       subscribe: (__, args, { user, isAuth }) => {
-        if (!user && isAuth) {
+        if (!user && !isAuth) {
           throw new GraphQLError("sorry, you're not an authorized user", {
             extensions: {
               code: UNAUTHORIZED,

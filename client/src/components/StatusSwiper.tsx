@@ -4,7 +4,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Avatar from "@mui/material/Avatar";
-import { ClipLoader } from "react-spinners";
+import Typography from "@mui/material/Typography";
 import { useRecoilValue } from "recoil";
 import blue from "@mui/material/colors/blue";
 import { filter, map, property } from "lodash";
@@ -20,10 +20,10 @@ import {
   AllFriendsQueryVariables,
 } from "../__generated__/graphql";
 import { ALL_FRIENDS } from "../graphql/Friends.graphql";
-import { IFriendStatus } from "../typings/User";
 import Context from "../store/ContextApi";
 import { IAuthState } from "../typings/GlobalState";
 import { IFriend } from "../typings/Friends";
+import friendShip from "../Images/static/friendShip.png";
 // Import Swiper styles
 import "swiper/css";
 import "swiper/css/pagination";
@@ -34,39 +34,6 @@ import "../css/swiper.css";
 SwiperCore.use([Virtual, Navigation, Pagination]);
 
 export default function StatusSwiper() {
-  const stories: { name: string; image: string }[] = [
-    {
-      name: "romeus",
-      image:
-        "https://static8.depositphotos.com/1008303/880/i/450/depositphotos_8803246-Asian-college-student.jpg",
-    },
-    {
-      name: "marshall",
-      image:
-        "https://www.academialeb.com/wp-content/uploads/2014/06/photodune-430148-college-or-university-students-m.jpg",
-    },
-    {
-      name: "slim",
-      image:
-        "https://media.istockphoto.com/id/1365601848/photo/portrait-of-a-young-woman-carrying-her-schoolbooks-outside-at-college.jpg?s=612x612&w=0&k=20&c=EVxLUZsL0ueYFF1Nixit6hg-DkiV52ddGw_orw9BSJA=",
-    },
-    {
-      name: "Roosevelt",
-      image:
-        "https://d2jyir0m79gs60.cloudfront.net/news/images/successful-college-student-lg.png",
-    },
-    {
-      name: "obama",
-      image:
-        "https://i.pinimg.com/736x/ee/75/c1/ee75c137caff28298ee9f80e1a6774bd.jpg",
-    },
-    {
-      name: "Romero",
-      image:
-        "https://www.reuters.com/resizer/N0ZGgG_NQYKc0ZOhcaeuHy4lFUs=/480x0/filters:quality(80)/cloudfront-us-east-2.images.arcpublishing.com/reuters/MY4F2ACIVZIIBACBYLPSVQNI6Y.jpg",
-    },
-  ];
-
   const contextData = React.useContext(Context);
   const AuthInfo = useRecoilValue<Partial<IAuthState>>(contextData.GetAuthInfo);
 
@@ -75,7 +42,9 @@ export default function StatusSwiper() {
   const { data, loading } = useQuery<
     GetUserStatusQuery,
     GetUserStatusQueryVariables
-  >(GET_USER_STATUS);
+  >(GET_USER_STATUS, {
+    variables: { getUserStatusUserId: `${AuthInfo.Data?._id}` },
+  });
 
   const { data: userFriends } = useQuery<
     AllFriendsQuery,
@@ -100,75 +69,98 @@ export default function StatusSwiper() {
 
   return (
     <>
-      <Swiper
-        slidesPerView={4}
-        spaceBetween={5}
-        navigation
-        pagination={{ el: ".swiper_pagination", clickable: true }}
-        onSlideChange={({ slidePrev }) => console.log(slidePrev)}
-      >
-        {allFriends.map((v, ind) => {
-          return (
-            <SwiperSlide key={ind}>
-              {({ isActive, isPrev, isNext }) => {
-                return (
-                  <Box
-                    sx={{
-                      alignItems: "center",
-                      height: 200,
-                    }}
-                  >
+      {allFriends.length <= 3 ? (
+        <Box>
+          <Box sx={{ height: 160, width: "100%" }}>
+            <img
+              alt=""
+              src={friendShip}
+              style={{
+                width: "inherit",
+                height: "inherit",
+                objectFit: "cover",
+              }}
+            />
+          </Box>
+          <Box sx={{ display: "flex", justifyContent: "center", py: 1.4 }}>
+            <Box>
+              <Typography fontWeight="bold" fontSize="19px">
+                you need at least 5 friends for status displaying
+              </Typography>
+            </Box>
+          </Box>
+        </Box>
+      ) : (
+        <Swiper
+          slidesPerView={4}
+          spaceBetween={5}
+          navigation
+          pagination={{ el: ".swiper_pagination", clickable: true }}
+          onSlideChange={({ slidePrev }) => console.log(slidePrev)}
+        >
+          {allFriends.map((v, ind) => {
+            return (
+              <SwiperSlide key={ind}>
+                {({ isActive, isPrev, isNext }) => {
+                  return (
                     <Box
                       sx={{
-                        position: "absolute",
-                        height: "100%",
-                        zIndex: 10,
-                        pl: 0.6,
-                        pt: 2,
+                        alignItems: "center",
+                        height: 200,
                       }}
                     >
                       <Box
                         sx={{
-                          border: `3px solid ${blue[800]}`,
-                          borderRadius: 100,
+                          position: "absolute",
+                          height: "100%",
+                          zIndex: 10,
+                          pl: 0.6,
+                          pt: 2,
                         }}
                       >
-                        <IconButton
-                          sx={{ m: 0, p: 0 }}
-                          onClick={() => setOpen(true)}
+                        <Box
+                          sx={{
+                            border: `3px solid ${blue[800]}`,
+                            borderRadius: 100,
+                          }}
                         >
-                          <Avatar
-                            alt=""
-                            src={v.Image}
-                            sx={{ width: 35, height: 35 }}
-                          />
-                        </IconButton>
+                          <IconButton
+                            sx={{ m: 0, p: 0 }}
+                            onClick={() => setOpen(true)}
+                          >
+                            <Avatar
+                              alt=""
+                              src={v.Image}
+                              sx={{ width: 35, height: 35 }}
+                            />
+                          </IconButton>
+                        </Box>
+                      </Box>
+                      <Box>
+                        <img
+                          alt=""
+                          src={v.Image}
+                          width="110"
+                          height="180"
+                          style={{
+                            objectFit: "cover",
+                            borderRadius: "15px",
+                          }}
+                        />
                       </Box>
                     </Box>
-                    <Box>
-                      <img
-                        alt=""
-                        src={v.Image}
-                        width="110"
-                        height="180"
-                        style={{
-                          objectFit: "cover",
-                          borderRadius: "15px",
-                        }}
-                      />
-                    </Box>
-                  </Box>
-                );
-              }}
-            </SwiperSlide>
-          );
-        })}
+                  );
+                }}
+              </SwiperSlide>
+            );
+          })}
 
-        <div
-          className="swiper_pagination"
-          style={{ textAlign: "center" }}
-        ></div>
-      </Swiper>
+          <div
+            className="swiper_pagination"
+            style={{ textAlign: "center" }}
+          ></div>
+        </Swiper>
+      )}
     </>
   );
 }

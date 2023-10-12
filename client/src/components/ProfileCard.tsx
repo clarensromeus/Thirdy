@@ -35,6 +35,7 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { nanoid } from "nanoid";
 import { useRecoilValue } from "recoil";
+import { useParams } from "react-router-dom";
 import { useReactiveVar } from "@apollo/client";
 // internally crafted imports of resources
 import { CssTextField } from "./MuiStyles";
@@ -114,6 +115,8 @@ export default function ProfileCard({ width }: ICard) {
     PostId: postId,
   };
 
+  let { id } = useParams<{ id: string }>();
+
   const changeHandler = (evt: React.ChangeEvent<HTMLInputElement>) => {
     const target = evt.target as typeof evt.target & {
       value: { value: string };
@@ -142,7 +145,7 @@ export default function ProfileCard({ width }: ICard) {
     UserStatisticsQuery,
     UserStatisticsQueryVariables
   >(USER_STATISTICS, {
-    variables: { userStaticsUserId: `${AuthInfo.Data?._id}` },
+    variables: { userStaticsUserId: `${id}` },
   });
 
   const { data: allLikesData } = useQuery<

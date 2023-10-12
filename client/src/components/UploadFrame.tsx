@@ -14,7 +14,11 @@ import {
   Change_User_ProfileMutationVariables,
 } from "../__generated__/graphql";
 import { IFrame } from "../typings/Profile";
-import { CHANGE_USER_PROFILE } from "../graphql/User.graphql";
+import {
+  CHANGE_USER_PROFILE,
+  Get_UserData,
+  USER_STATISTICS,
+} from "../graphql/User.graphql";
 import uploadFile from "./Upload";
 import { IUpload } from "../typings/Profile";
 import modeContext from "../store/ModeContext";
@@ -154,6 +158,7 @@ const UploadFrame = ({ openFrame, setOpenFrame, Image, userId }: IFrame) => {
                         changeUserProfileFile: image,
                         changeUserProfileId: `${userId}`,
                       },
+                      refetchQueries: [Get_UserData, USER_STATISTICS],
                       onCompleted: () => {
                         // close the frame upload is success
                         setOpenFrame(false);

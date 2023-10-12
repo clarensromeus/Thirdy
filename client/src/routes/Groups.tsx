@@ -62,6 +62,7 @@ import { getStyles } from "../components/Friends/Invitation";
 import modeContext from "../store/ModeContext";
 import { IMode } from "../typings/GlobalState";
 import useNotification from "../hooks/useNotifications";
+import useWindowSize from "../hooks/useWindowSize";
 
 // it allows to have access to local related time
 dayjs.extend(localizedFormat);
@@ -80,6 +81,8 @@ const MenuProps = {
 const Groups = () => {
   const contextData = React.useContext(Context);
   const modeContextData = React.useContext(modeContext);
+
+  const { width, height } = useWindowSize();
 
   const theme = useTheme();
   // unique identifier
@@ -227,7 +230,7 @@ const Groups = () => {
                 gap: 4,
               }}
             >
-              <Box sx={{ width: 500 }}>
+              <Box sx={{ width: width && width <= 720 ? "100%" : 500 }}>
                 <Box>
                   <Grid container spacing={3}>
                     <Grid item xs={12} sm={6}>
@@ -383,7 +386,7 @@ const Groups = () => {
               </Box>
               <Box
                 sx={{
-                  width: 500,
+                  width: width && width <= 720 ? "100%" : 500,
                   position: "relative",
                   boxSizing: "boxSizing",
                   border: `1px solid ${grey[300]}`,
@@ -441,7 +444,7 @@ const Groups = () => {
                       width=""
                       height="inherit"
                       style={{
-                        width: "466px",
+                        width: width && width <= 720 ? "100%" : "466px",
                         height: "200px",
                         objectFit: "cover",
                       }}
@@ -474,7 +477,7 @@ const Groups = () => {
                   </Typography>
                 </Box>
               </Box>
-              <Box sx={{ width: 500 }}>
+              <Box sx={{ width: width && width <= 720 ? "100%" : 500 }}>
                 <Button
                   type="submit"
                   fullWidth
@@ -515,7 +518,7 @@ const Groups = () => {
               flexWrap: "wrap",
               gap: 4,
               "& > .GroupBox": {
-                width: 400,
+                width: width && width <= 720 ? "100%" : 400,
                 border: isEqual(mode.mode, "light")
                   ? `1px solid ${grey[100]}`
                   : `1px solid ${grey[800]}`,

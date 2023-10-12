@@ -21,9 +21,10 @@ export default gql`
     LogOut: Response
     OnlineOfflineStatus(userId: ID!, online: Boolean!): Response
     ChangePassword(userEmail: String!, newPassword: String!): Response
+    RefreshToken: tokenResponse
   }
 
-  #________________types______________________
+  #________________types_____________________#
   type Response {
     message: String!
     token: String
@@ -40,6 +41,7 @@ export default gql`
     Sex: String!
     DOB: String!
     Bio: String
+    updatedAt: Date
   }
 
   type User {
@@ -63,10 +65,17 @@ export default gql`
     createdAt: Date
   }
 
+  type tokenResponse {
+    message: String
+    success: Boolean
+    refreshToken: String
+  }
+
   type Statics {
     follower: Int
     following: Int
     posts: [userPosts!]
+    UserInfo: userInfo
   }
 
   type friend {

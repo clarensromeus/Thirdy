@@ -114,7 +114,7 @@ export default function CardComment({
   // grab the last post comment
   const LastComment = last(comments);
   // grab the last three likes
-  const LastThreeComments = slice(likes, -3, -1);
+  const LastThreeLikes = slice(likes, -3, -1);
 
   return (
     <>

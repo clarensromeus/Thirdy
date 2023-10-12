@@ -37,6 +37,7 @@ import {
 import { Create_post } from "../graphql/Posts.graphql";
 import modeContext from "../store/ModeContext";
 import { IMode } from "../typings/GlobalState";
+import useWindowSize from "../hooks/useWindowSize";
 
 const PostFrame = ({
   openFrame,
@@ -56,6 +57,7 @@ const PostFrame = ({
   };
 
   const mode = useRecoilValue<IMode>(modeContextData.GetMode);
+  const { width, height } = useWindowSize();
 
   const upload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const validity = e.target.validity;
@@ -98,8 +100,8 @@ const PostFrame = ({
             left: "50%",
             transform: "translate(-50%, -50%)",
             bgcolor: isEqual(mode.mode, "light") ? "white" : "black",
-            width: 550,
-            height: 440,
+            width: width && width <= 645 ? "100%" : 550,
+            height: width && width <= 645 ? "100%" : 440,
           }}
         >
           <Box

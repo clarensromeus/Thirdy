@@ -19,6 +19,7 @@ import { InitialMode } from "./store/ContextData";
 import ForgotPassword from "./routes/Forgotpassword";
 import ChangeStatus from "./routes/ChangeStatus";
 import Verificationcode from "./routes/VerificationCode";
+import RefreshToken from "./components/RefreshToken";
 
 // lazy routes imports
 const Connection = React.lazy(() => import("./routes/Connection"));
@@ -51,6 +52,7 @@ const Pickrouters = (): JSX.Element => {
           <Route path="*" element={<NotFound />} />
           <Route path="forgotpassword" element={<ForgotPassword />} />
           <Route path="verificationcode" element={<Verificationcode />} />
+          <Route path="refreshToken" element={<RefreshToken />} />
         </Routes>
       </modeContext.Provider>
     </Context.Provider>

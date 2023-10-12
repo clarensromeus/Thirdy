@@ -16,6 +16,7 @@ import { onInputClick } from "./eventHandler";
 import modeContext from "../store/ModeContext";
 import { IMode } from "../typings/GlobalState";
 import { useRecoilValue } from "recoil";
+import useWindowSize from "../hooks/useWindowSize";
 
 const BottomChat = ({
   handleChange,
@@ -31,6 +32,7 @@ const BottomChat = ({
   const [isValid, setValid] = React.useState<boolean>(false);
 
   const mode = useRecoilValue<IMode>(modeContextData.GetMode);
+  const { width, height } = useWindowSize();
 
   // function to upload image
   const upload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -79,7 +81,7 @@ const BottomChat = ({
       <Box
         sx={{
           position: "relative",
-          width: "71%",
+          width: width && width <= 800 ? "96%" : "71%",
           boxSizing: "border-box",
         }}
       >

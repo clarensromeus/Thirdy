@@ -6,8 +6,11 @@ import DateRangeIcon from "@mui/icons-material/DateRange";
 import upperFirst from "lodash/upperFirst";
 import IconButton from "@mui/material/IconButton";
 import { useRecoilValue } from "recoil";
+import dayjs from "dayjs";
+import localizedFormat from "dayjs/plugin/localizedFormat";
 import grey from "@mui/material/colors/grey";
 import { useParams } from "react-router-dom";
+import { gt } from "lodash";
 import EditIcon from "@mui/icons-material/Edit";
 import { useMutation, useQuery } from "@apollo/client";
 // externally crafted imports of resources
@@ -30,6 +33,9 @@ import { IMode } from "../typings/GlobalState";
 import { isEqual } from "lodash";
 import { ICard } from "../typings/Notifications";
 import ProfileCard from "../components/ProfileCard";
+import useWindowSize from "../hooks/useWindowSize";
+
+dayjs.extend(localizedFormat);
 
 const Profile = () => {
   const contextData = React.useContext(Context);
@@ -49,6 +55,7 @@ const Profile = () => {
   const [isValid, setValid] = React.useState<boolean>(false);
 
   const [openFrame, setOpenFrame] = React.useState<boolean>(false);
+  const { width } = useWindowSize();
 
   const Frame: IFrame = {
     openFrame,
@@ -78,18 +85,19 @@ const Profile = () => {
     Change_CoverMutationVariables
   >(CHANGE_COVER_IMAGE);
 
-  const { data, loading } = useQuery<
-    UserStatisticsQuery,
-    UserStatisticsQueryVariables
-  >(USER_STATISTICS, { variables: { userStaticsUserId: `${id}` } });
+  const { data } = useQuery<UserStatisticsQuery, UserStatisticsQueryVariables>(
+    USER_STATISTICS,
+    { variables: { userStaticsUserId: `${id}` } }
+  );
 
   const cardWidth: ICard = {
-    width: 500,
+    width: width && width <= 720 ? "max(40%, 90%)" : 500,
     PostId: "",
   };
 
   return (
     <>
+      <span>{width}</span>
       <UploadFrame {...Frame} />
       <Box sx={{ width: "100%", height: "100vh", p: 0, m: 0 }}>
         <Box
@@ -164,8 +172,7 @@ const Profile = () => {
             >
               <Avatar
                 sx={{ width: 160, height: 160, zIdex: 2 }}
-                alt="profile picture"
-                src={`${AuthInfo.Data?.Image}`}
+                src={`${data?.userStatics?.UserInfo?.Image}`}
               />
             </Box>
             <Box
@@ -194,8 +201,8 @@ const Profile = () => {
         </Box>
         <Box sx={{ width: "100%" }}>
           <Box
-            pl={36}
-            pt={1}
+            pl={width && width <= 812 ? 6 : 36}
+            pt={width && width <= 812 ? 10 : 1}
             sx={{ bgcolor: isEqual(mode.mode, "white") ? "white" : "dark" }}
           >
             <Box>
@@ -204,8 +211,8 @@ const Profile = () => {
                 fontFamily="Roboto"
                 fontSize="1.9rem"
               >
-                {upperFirst(`${AuthInfo?.Data?.Firstname}`)}{" "}
-                {AuthInfo.Data?.Lastname}
+                {upperFirst(`${data?.userStatics?.UserInfo?.Firstname}`)}{" "}
+                {data?.userStatics?.UserInfo?.Lastname}
               </Typography>
             </Box>
             <Box sx={{ display: "flex", gap: 2 }}>
@@ -250,9 +257,14 @@ const Profile = () => {
                   }}
                 />
               </Box>
-              <Box>
-                <Typography color="text.secondary">
-                  jannuary 29, 1998
+              <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+                <Typography fontWeight="560" fontSize="16px">
+                  Last trending
+                </Typography>
+                <Typography color="text.secondary" fontSize="15px">
+                  {dayjs(data?.userStatics?.UserInfo?.updatedAt).format(
+                    "MMMM D, YYYY h:mm"
+                  )}
                 </Typography>
               </Box>
             </Box>
@@ -268,9 +280,18 @@ const Profile = () => {
                 </Typography>
               </Box>
               <Box>
-                <Typography color="text.secondary">
-                  i am a software engineer
-                </Typography>
+                {gt(data?.userStatics?.UserInfo?.Bio?.length, 1) ? (
+                  <Typography color="text.secondary">
+                    {data?.userStatics?.UserInfo?.Bio?.slice(0, 50)}
+                    {gt(data?.userStatics?.UserInfo?.Bio?.length, 49)
+                      ? "..."
+                      : ""}
+                  </Typography>
+                ) : (
+                  <Typography color="text.secondary">
+                    what's up! what are you craving for?
+                  </Typography>
+                )}
               </Box>
               <Box pl={5}>
                 <IconButton>
@@ -282,7 +303,7 @@ const Profile = () => {
           </Box>
         </Box>
         <Box
-          pl={36}
+          pl={width && width <= 812 ? 6 : 36}
           sx={{ bgcolor: isEqual(mode.mode, "light") ? "white" : "dark" }}
         >
           <Box
@@ -309,8 +330,22 @@ const Profile = () => {
           </Box>
           <Divider />
         </Box>
-        <Box pl={36} pt={2}>
-          <ProfileCard {...cardWidth} />
+        <Box
+          pb={{ xs: 6, sm: 6, lg: 1 }}
+          pl={width && width <= 812 ? 6 : 36}
+          pt={2}
+        >
+          {gt(data?.userStatics?.posts?.length, 0) ? (
+            <ProfileCard {...cardWidth} />
+          ) : (
+            <React.Fragment>
+              <Box sx={{ mt: 1 }}>
+                <Typography fontWeight="bold" fontSize="25px">
+                  No post created
+                </Typography>
+              </Box>
+            </React.Fragment>
+          )}
         </Box>
       </Box>
     </>

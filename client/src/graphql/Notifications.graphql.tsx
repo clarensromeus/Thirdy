@@ -18,6 +18,7 @@ const GET_NOTIFICATIONS = gql`
         GroupName
         NotiImage
         NotiText
+        FriendRequestID
       }
       NotiReference
       createdAt

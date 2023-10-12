@@ -8,14 +8,13 @@ enum NotiReference {
   Accepted = "accepted",
   Reject = "rejected",
   Request = "requested",
-  Friend = "sent",
   Invitation = "added",
   addAdmin = "adminRoleAdded",
   removedAdmin = "removedAdminRole",
   removed = "removed",
   photo = "pictured",
   Tag = "tagged",
-  unfollowed = "unfollow",
+  unfollowed = "unfollowed",
 }
 
 export { NotiReference };

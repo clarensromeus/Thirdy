@@ -10,10 +10,14 @@ import {
 import GroupsIcon from "@mui/icons-material/Groups";
 import { IRetweetProps } from "../typings/Post";
 import PeopleIcon from "@mui/icons-material/People";
-import { useRecoilValue } from "recoil";
+import {
+  useRecoilBridgeAcrossReactRoots_UNSTABLE,
+  useRecoilValue,
+} from "recoil";
 import { nanoid } from "nanoid";
 import { useMutation } from "@apollo/client";
 import { ClipLoader } from "react-spinners";
+import { useReactiveVar } from "@apollo/client";
 // internally crafted imports of resources
 import Context from "../store/ContextApi";
 import { IAuthState } from "../typings/GlobalState";
@@ -31,6 +35,9 @@ import {
 import { IShareDataWithFriend, IShareDataWithGroup } from "../typings/Post";
 import SharewithFriends from "./Friends/SharewithFriends";
 import SharePostWithGroup from "./Group/ShareWithGroup";
+import useNotification from "../hooks/useNotifications";
+import { Authentication } from "../Global/GlobalAuth";
+import { NotiReference } from "../Enums";
 
 const Retweet = ({
   anchorEl,
@@ -72,6 +79,9 @@ const Retweet = ({
     setAnchorEl(anchorEl ? null : event.currentTarget);
   };
 
+  const { PushNotification, CreateNotification } = useNotification();
+  const isAuth = useReactiveVar(Authentication);
+
   const [Retweet, { loading }] = useMutation<
     RetweetPostMutation,
     RetweetPostMutationVariables
@@ -81,6 +91,9 @@ const Retweet = ({
     Create_PostMutation,
     Create_PostMutationVariables
   >(Create_post);
+
+  // push real time notifications
+  PushNotification({ isAuth: Boolean(isAuth.isLoggedIn) });
 
   return (
     <>
@@ -180,6 +193,24 @@ const Retweet = ({
                         isRetweeted: true,
                         RetweetedPost: _id,
                       },
+                    },
+                    onCompleted: async () => {
+                      try {
+                        await CreateNotification({
+                          ReceiverId: `${userId}`,
+                          SenderInfo: `${AuthInfo.Data?._id}`,
+                          isGroup: Boolean(false),
+                          isSeen: Boolean(false),
+                          NotiEngine: {
+                            GroupName: "",
+                            NotiImage: "",
+                            NotiText: Title,
+                          },
+                          NotiReference: NotiReference.Retweeted,
+                        });
+                      } catch (error) {
+                        throw new Error(`${error}`);
+                      }
                     },
                     refetchQueries: [Get_All_Post],
                   });

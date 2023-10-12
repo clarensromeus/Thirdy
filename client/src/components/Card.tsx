@@ -41,6 +41,7 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import { nanoid } from "nanoid";
 import { Waypoint } from "react-waypoint";
 import { useRecoilValue } from "recoil";
+import { NavigateFunction, useNavigate } from "react-router-dom";
 import { useReactiveVar } from "@apollo/client";
 // internally crafted imports of resources
 import { CssTextField } from "./MuiStyles";
@@ -81,6 +82,9 @@ import { ICard } from "../typings/Notifications";
 import { ImoreActionProps } from "../typings/Post";
 import { NotiReference } from "../Enums";
 import { Authentication } from "../Global/GlobalAuth";
+import LastLikesPerson from "./LastLikesPerson";
+import { ILike, ILastLIkes } from "../typings/Post";
+import useWindowSize from "../hooks/useWindowSize";
 
 export default function CardPost({ width }: ICard) {
   /*______Queries helpers___________ */
@@ -122,6 +126,7 @@ export default function CardPost({ width }: ICard) {
   const mode = useRecoilValue<IMode>(modeContextData.GetMode);
 
   const isAuth = useReactiveVar(Authentication);
+  const navigate: NavigateFunction = useNavigate();
 
   const [body, setBody] = React.useState<string>("");
 
@@ -217,7 +222,16 @@ export default function CardPost({ width }: ICard) {
           // grab the last post comment
           const LastComment = last(comments);
           // grab the last three comments
-          const LastThreeComments = slice(comments, 0, -1);
+          const LastThreeLikes = slice(likes, -4, -1);
+
+          console.log("last three likes", LastThreeLikes);
+          console.log("likes", likes);
+
+          const LastLikesData: ILastLIkes = {
+            likes: {
+              Likes: LastThreeLikes,
+            },
+          };
 
           // date from the time which the post was released
           const date: string = dayjs(`${createdAt}`).fromNow();
@@ -238,13 +252,19 @@ export default function CardPost({ width }: ICard) {
               >
                 <CardHeader
                   avatar={
-                    <Avatar
-                      sx={{ bgcolor: red[500] }}
-                      aria-label="recipe"
-                      src={`${User?.Image}`}
+                    <IconButton
+                      disableFocusRipple
+                      disableRipple
+                      disableTouchRipple
+                      sx={{ m: 0, p: 0 }}
+                      onClick={() => navigate(`profile/${User?._id}`)}
                     >
-                      R
-                    </Avatar>
+                      <Avatar
+                        sx={{ bgcolor: red[500] }}
+                        aria-label="recipe"
+                        src={`${User?.Image}`}
+                      />
+                    </IconButton>
                   }
                   action={<MoreAction {...moreActionData} />}
                   title={
@@ -517,7 +537,8 @@ export default function CardPost({ width }: ICard) {
                   mb={0.4}
                   sx={{ display: "flex", gap: 1, alignItems: "center", ml: 1 }}
                 >
-                  <Box>
+                  <LastLikesPerson {...LastLikesData} />
+                  {/* <Box>
                     <Typography component="span" style={{ color: blue[600] }}>
                       8.3k
                     </Typography>{" "}
@@ -527,7 +548,7 @@ export default function CardPost({ width }: ICard) {
                     <span style={{ fontWeight: "bold" }}>you </span> and
                     <span style={{ fontWeight: "bold" }}> jhonny</span> likes
                     your post
-                  </Box>
+                  </Box> */}
                 </Box>
                 <Divider />
                 <CardActions
@@ -597,34 +618,35 @@ export default function CardPost({ width }: ICard) {
                                   (likes) => likes.PostId
                                 ).includes(`${data?.PostLikes?.PostId}`);
 
-                              if (isAlreadyLikeById && isAlreadyLikeByPostId) {
+                              if (isAlreadyLikeByPostId && isAlreadyLikeById) {
+                                // if post is already liked by the user
+                                // remove the user
                                 cache.writeQuery({
                                   query: ALL_POST_LIKES,
                                   data: {
                                     PostLikes: cacheData?.PostLikes.filter(
                                       (likes) => {
                                         return (
-                                          likes.PostId !==
-                                            data?.PostLikes?.PostId &&
                                           likes.User?._id !==
-                                            `${AuthInfo.Data?._id}`
+                                          `${AuthInfo.Data?._id}`
                                         );
                                       }
                                     ),
                                   },
                                 });
                               } else {
-                                if (!cacheData) return [];
-
-                                cache.writeQuery({
-                                  query: ALL_POST_LIKES,
-                                  data: {
-                                    PostLikes: [
-                                      ...cacheData?.PostLikes,
-                                      data?.PostLikes,
-                                    ],
-                                  },
-                                });
+                                // else add another like
+                                if (cacheData) {
+                                  cache.writeQuery({
+                                    query: ALL_POST_LIKES,
+                                    data: {
+                                      PostLikes: [
+                                        ...cacheData.PostLikes,
+                                        data?.PostLikes,
+                                      ],
+                                    },
+                                  });
+                                }
                               }
                             },
                           });

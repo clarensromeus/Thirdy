@@ -27,6 +27,7 @@ import { EditFrameProps } from "../../typings/Post";
 import { IUpload } from "../../typings/Profile";
 import uploadFile from "../Upload";
 import { EDIT_POST, Get_All_Post } from "../../graphql/Posts.graphql";
+import useWindowSize from "../../hooks/useWindowSize";
 
 const EditFrame = ({
   open,
@@ -40,6 +41,7 @@ const EditFrame = ({
   const [title, setTitle] = React.useState<string>(PostTitle ?? "");
 
   const [image, setImage] = React.useState<File | undefined>();
+  const { width, height } = useWindowSize();
 
   const [EditPost, { loading }] = useMutation<
     EditPostMutation,
@@ -92,8 +94,8 @@ const EditFrame = ({
             left: "50%",
             transform: "translate(-50%, -50%)",
             bgcolor: isEqual(mode.mode, "light") ? "white" : "black",
-            width: 550,
-            height: 510,
+            width: width && width <= 645 ? "100%" : 550,
+            height: width && width <= 645 ? "100%" : 510,
           }}
         >
           <Box

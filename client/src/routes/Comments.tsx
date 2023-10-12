@@ -32,6 +32,7 @@ import randomName from "../utils/Random";
 import { IMode } from "../typings/GlobalState";
 import modeContext from "../store/ModeContext";
 import { ICard } from "../typings/Notifications";
+import useWindowSize from "../hooks/useWindowSize";
 
 const Comment = ({ state, setState, PostId }: ICommentProps): JSX.Element => {
   const toggleDrawer =
@@ -57,6 +58,7 @@ const Comment = ({ state, setState, PostId }: ICommentProps): JSX.Element => {
   const [body, setBody] = React.useState<string>("");
 
   const ScrollToTheBottom = React.useRef<HTMLDivElement | null>(null);
+  const { width, height } = useWindowSize();
 
   const [addComments] = useMutation<
     Create_CommentsMutation,
@@ -106,7 +108,7 @@ const Comment = ({ state, setState, PostId }: ICommentProps): JSX.Element => {
     <>
       <Drawer
         PaperProps={{
-          sx: { width: 400 },
+          sx: { width: width && width <= 720 ? "100%" : 400 },
         }}
         anchor="right"
         open={state}
@@ -297,7 +299,7 @@ const Comment = ({ state, setState, PostId }: ICommentProps): JSX.Element => {
                 position: "fixed",
                 bottom: 0,
                 height: "8.4%",
-                width: "28.6%",
+                width: width && width <= 800 ? "94%" : "28.6%",
               }}
             >
               <Box

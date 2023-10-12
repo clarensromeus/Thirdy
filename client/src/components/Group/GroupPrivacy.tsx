@@ -60,6 +60,7 @@ import modeContext from "../../store/ModeContext";
 import useNotification from "../../hooks/useNotifications";
 import { NotiReference } from "../../Enums";
 import { Authentication } from "../../Global/GlobalAuth";
+import useWindowSize from "../../hooks/useWindowSize";
 
 const Actions: IActions[] = [
   {
@@ -92,6 +93,7 @@ const GroupPrivacy = (): JSX.Element => {
   const mode = useRecoilValue<IMode>(modeContextData.GetMode);
 
   const isAuth = useReactiveVar(Authentication);
+  const { width, height } = useWindowSize();
 
   const { PushNotification, CreateNotification } = useNotification();
 
@@ -180,7 +182,7 @@ const GroupPrivacy = (): JSX.Element => {
             Facebook Commumity
           </Typography>
         </Box>
-        <Box sx={{ width: 600, pt: 0.5 }}>
+        <Box sx={{ width: width && width <= 720 ? "100%" : 600, pt: 0.5 }}>
           <Typography fontSize="16px" color="text.secondary">
             here's all operations possible on the group to perform only with an
             administrator's right, feel free and make actions your own

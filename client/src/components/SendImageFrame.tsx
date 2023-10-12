@@ -20,6 +20,7 @@ import useNotification from "../hooks/useNotifications";
 import { IS_AUTH } from "../LocalQueries/isAuth";
 import { IAuthentication } from "../typings/Authentication";
 import { NotiReference } from "../Enums";
+import useWindowSize from "../hooks/useWindowSize";
 
 const SendImageFrame = ({
   setState,
@@ -45,6 +46,8 @@ const SendImageFrame = ({
   // push Real time notifications
   PushNotification({ isAuth: Boolean(data?.isLoggedIn.isLoggedIn) });
 
+  const { width, height } = useWindowSize();
+
   return (
     <>
       <Box
@@ -66,7 +69,7 @@ const SendImageFrame = ({
             left: "50%",
             transform: "translate(-50%, -50%)",
             bgcolor: isEqual(mode.mode, "light") ? "white" : "black",
-            width: 550,
+            width: width && width <= 650 ? "100%" : 550,
             height: 440,
           }}
         >
@@ -94,7 +97,7 @@ const SendImageFrame = ({
             <Box
               sx={{
                 height: 300,
-                width: 370,
+                width: width && width <= 650 ? 400 : 370,
                 border: "1px solid grey",
                 alignText: "center",
               }}
@@ -105,9 +108,10 @@ const SendImageFrame = ({
                 src={PreviewImage}
               />
             </Box>
-            <Box>
+            <Box sx={{ width: width && width <= 650 ? 400 : 370 }}>
               <Button
                 endIcon={<Send />}
+                fullWidth
                 variant="contained"
                 sx={{
                   color: "white",

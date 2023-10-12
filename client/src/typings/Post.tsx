@@ -137,6 +137,28 @@ interface ImoreActionProps<T> {
   PostImage: T;
 }
 
+interface ILike {
+  Likes: {
+    __typename?: "Likes" | undefined;
+    _id?: any;
+    PostId?: string | null | undefined;
+    User?:
+      | {
+          __typename?: "User" | undefined;
+          _id: any;
+          Firstname?: string | null;
+          Lastname?: string | null;
+          Image?: string | null;
+        }
+      | null
+      | undefined;
+  }[];
+}
+
+interface ILastLIkes {
+  likes: ILike;
+}
+
 export type {
   IPostFrame,
   Ipost,
@@ -147,4 +169,6 @@ export type {
   ISendImageFrameProps,
   EditFrameProps,
   ImoreActionProps,
+  ILike,
+  ILastLIkes,
 };

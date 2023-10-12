@@ -18,6 +18,7 @@ type INotiData<S> = {
     GroupName: S;
     NotiText: S;
     NotiImage: S;
+    FriendRequestID?: S;
   };
 };
 
@@ -45,6 +46,7 @@ type SendNotification = {
     GroupName?: string | null;
     NotiText?: string | null;
     NotiImage?: string | null;
+    FriendRequestID?: string | null;
   } | null;
 };
 

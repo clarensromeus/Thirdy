@@ -11,10 +11,12 @@ import ListItem from "@mui/material/ListItem";
 import ListItemText from "@mui/material/ListItemText";
 import ListItemAvatar from "@mui/material/ListItemAvatar";
 import Checkbox from "@mui/material/Checkbox";
-import { isEmpty } from "lodash";
+import { isEmpty, isEqual, debounce } from "lodash";
 import Avatar from "@mui/material/Avatar";
 import Button from "@mui/material/Button";
 import { ClipLoader } from "react-spinners";
+import grey from "@mui/material/colors/grey";
+import { useRecoilValue } from "recoil";
 import { useQuery, useMutation } from "@apollo/client";
 // internally crafted imports of resources
 import {
@@ -27,6 +29,9 @@ import { SHARE_POST_With_Friends } from "../../graphql/Posts.graphql";
 import { ALL_FRIENDS } from "../../graphql/Friends.graphql";
 import { IShareDataWithFriend } from "../../typings/Post";
 import { CssTextFieldShare } from "../../MuiStyles/textField";
+import useWindowSize from "../../hooks/useWindowSize";
+import modeContext from "../../store/ModeContext";
+import { IMode } from "../../typings/GlobalState";
 
 const SharewithFriends = ({
   openFrame,
@@ -34,7 +39,10 @@ const SharewithFriends = ({
   _id,
   PostInfo: { PostId, Image, Title },
 }: IShareDataWithFriend) => {
+  const modeContextData = React.useContext(modeContext);
   const [checked, setChecked] = React.useState<string[]>([]);
+
+  const [search, setSearch] = React.useState<string>("");
 
   const handleToggle = (value: string) => () => {
     const currentIndex = checked.indexOf(value);
@@ -61,6 +69,28 @@ const SharewithFriends = ({
     SharePostWithMutationVariables
   >(SHARE_POST_With_Friends);
 
+  const handleChangeEvent = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const target = event.target as typeof event.target & {
+      value: { value: string };
+    };
+    setSearch(target.value);
+  };
+
+  const debounceSearchResult = React.useMemo(() => {
+    return debounce(handleChangeEvent, 1000);
+  }, [search]);
+
+  const mode = useRecoilValue<IMode>(modeContextData.GetMode);
+
+  const { width, height } = useWindowSize();
+
+  React.useEffect(() => {
+    return () => {
+      // cleanup debounce search for re-rendering prevention
+      debounceSearchResult.cancel();
+    };
+  });
+
   return (
     <>
       <Box
@@ -81,9 +111,9 @@ const SharewithFriends = ({
             top: "50%",
             left: "50%",
             transform: "translate(-50%, -50%)",
-            bgcolor: "white",
-            width: 590,
-            height: 480,
+            bgcolor: isEqual(mode.mode, "light") ? "white" : "black",
+            width: width && width <= 650 ? "100%" : 590,
+            height: width && width <= 650 ? "100%" : 480,
           }}
         >
           <Box
@@ -95,34 +125,60 @@ const SharewithFriends = ({
             }}
           >
             <Box sx={{ alignSelf: "center" }}>
-              <Typography fontSize="1.3em" fontWeight="bold">
+              <Typography
+                fontSize="1.3em"
+                fontWeight="bold"
+                color={isEqual(mode.mode, "light") ? "black" : grey[100]}
+              >
                 Share with friends
               </Typography>
             </Box>
             <Box pl={20}>
               <IconButton
-                sx={{ bgcolor: "rgba(232,240,254, 0.8)" }}
+                sx={{
+                  bgcolor: isEqual(mode.mode, "light")
+                    ? "rgba(232,240,254, 0.8)"
+                    : "rgba(255, 255,255, 0.2)",
+                }}
                 disableFocusRipple
                 disableRipple
                 disableTouchRipple
                 onClick={() => setOpenFrame(false)}
               >
-                <CloseIcon sx={{ color: "black", fontSize: "1.5rem" }} />
+                <CloseIcon
+                  sx={{
+                    color: isEqual(mode.mode, "light") ? "black" : grey[100],
+                    fontSize: "1.5rem",
+                  }}
+                />
               </IconButton>
             </Box>
           </Box>
           <Divider />
           <Box p={2}>
             <CssTextFieldShare
-              sx={{ "& fieldset": { border: "none" } }}
+              sx={{
+                "& fieldset": { border: "none" },
+                bgcolor: isEqual(mode.mode, "light")
+                  ? "rgba(232,240,254, 0.8)"
+                  : "rgba(255, 255, 255, 0.2)",
+                borderRadius: 10,
+              }}
               variant="outlined"
               size="small"
               fullWidth
+              onChange={debounceSearchResult}
               placeholder="search a friend..."
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <SearchIcon />
+                    <SearchIcon
+                      sx={{
+                        color: isEqual(mode.mode, "light")
+                          ? grey[700]
+                          : grey[400],
+                      }}
+                    />
                   </InputAdornment>
                 ),
               }}
@@ -150,11 +206,17 @@ const SharewithFriends = ({
                   position: "relative",
                   overflow: "auto",
                   maxHeight: 160,
-                  maxWidth: 570,
+                  maxWidth: width && width <= 650 ? "94%" : 570,
                   bgcolor: "background.paper",
                 }}
               >
-                {data?.AllFriends?.map((friend, ind) => {
+                {data?.AllFriends?.filter((friends) =>
+                  search.toLowerCase() === ""
+                    ? friends
+                    : friends.User?.Firstname?.toLowerCase().includes(
+                        search.toLowerCase()
+                      )
+                ).map((friend, ind) => {
                   return (
                     <ListItem
                       key={`${friend.User?._id}`}
@@ -173,7 +235,12 @@ const SharewithFriends = ({
                       </ListItemAvatar>
                       <ListItemText
                         primary={
-                          <Typography textTransform="capitalize">
+                          <Typography
+                            textTransform="capitalize"
+                            color={
+                              isEqual(mode.mode, "light") ? "black" : grey[100]
+                            }
+                          >
                             {friend.User?.Firstname} {friend.User?.Lastname}
                           </Typography>
                         }
@@ -192,6 +259,7 @@ const SharewithFriends = ({
               <Button
                 variant="contained"
                 fullWidth
+                sx={{ bgcolor: isEqual(mode.mode, "light") ? "" : "#0866ff" }}
                 disabled={isEmpty(checked) && true}
                 onClick={async () => {
                   try {

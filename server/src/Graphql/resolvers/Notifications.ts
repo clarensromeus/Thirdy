@@ -6,6 +6,8 @@ import dateScalar from "../../Service/DataScalar.ts";
 import MongoId from "../../Service/MongoIdScalar.ts";
 import { Resolvers } from "../../__generate__/types";
 import { NOTIFICATION_CHANNEL } from "../../Constants/Notifications.ts";
+import { UNAUTHORIZED } from "../../Constants/User.ts";
+import { GraphQLError } from "graphql";
 
 const pubSub: PubSub = new PubSub();
 
@@ -100,7 +102,15 @@ const Notifications: Resolvers = {
   },
   Subscription: {
     SendNotification: {
-      subscribe: () => {
+      subscribe: (__, args, { user, isAuth }) => {
+        if (!user && !isAuth) {
+          throw new GraphQLError("sorry, you're not an authorized user", {
+            extensions: {
+              code: UNAUTHORIZED,
+              warning: "retry with an authorized account",
+            },
+          });
+        }
         return {
           // listening to the Notification channel event
           [Symbol.asyncIterator]: () =>

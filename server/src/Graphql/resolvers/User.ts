@@ -72,7 +72,7 @@ const UserResolver: Resolvers = {
         const user = await userModel
           .findOne({ _id: userID })
           .populate("Friends")
-          .select("Friends");
+          .select("Friends _id Firstname Lastname Image Email Bio updatedAt");
 
         // grab all friends whose online user is followed
         const friends = await friendModel
@@ -101,6 +101,7 @@ const UserResolver: Resolvers = {
           follower: user?.Friends?.length,
           following: friends.length,
           posts: posts,
+          UserInfo: user,
         };
       } catch (error) {
         throw new Error(`${error}`);
@@ -446,6 +447,30 @@ const UserResolver: Resolvers = {
 
         return {
           message: "password successfully changed",
+          success: true,
+        };
+      } catch (error) {
+        throw new Error(`${error}`);
+      }
+    },
+    RefreshToken: async (__, {}) => {
+      try {
+        const isTokenExist = await REDIS_CLIENT.EXISTS("REFRESH_TOKEN");
+        if (isTokenExist && !isNil(isTokenExist)) {
+          // if token exist get it and send it to the client
+          const refreshToken: string | null = await REDIS_CLIENT.GET(
+            "REFRESH_TOKEN"
+          );
+
+          return {
+            message: "token is successfully sent",
+            success: true,
+            refreshToken,
+          };
+        }
+
+        return {
+          message: "no token is refreshed because there's none",
           success: true,
         };
       } catch (error) {

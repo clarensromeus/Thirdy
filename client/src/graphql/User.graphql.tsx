@@ -21,6 +21,16 @@ const USER_REGISTERATION = gql`
   }
 `;
 
+const REFRESH_TOKEN = gql`
+  mutation RefreshToken {
+    RefreshToken {
+      message
+      success
+      refreshToken
+    }
+  }
+`;
+
 const Get_UserData = gql`
   query userData($_id: ID!) {
     userData(_id: $_id) {
@@ -71,6 +81,15 @@ const USER_STATISTICS = gql`
     userStatics(userID: $userStaticsUserId) {
       follower
       following
+      UserInfo {
+        _id
+        Firstname
+        Lastname
+        Image
+        Bio
+        Email
+        updatedAt
+      }
       posts {
         _id
         isGroup
@@ -177,4 +196,5 @@ export {
   CHANGE_PASSWORD,
   SEND_MAIL,
   USER_STATISTICS,
+  REFRESH_TOKEN,
 };

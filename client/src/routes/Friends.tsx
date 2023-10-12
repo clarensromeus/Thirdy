@@ -492,7 +492,7 @@ const Friends = () => {
                               FRIEND_SUGGESTIONS,
                               ALL_FRIEND_REQUESTS,
                             ],
-                            onCompleted: async () => {
+                            onCompleted: async (data) => {
                               try {
                                 await CreateNotification({
                                   ReceiverId: `${suggestions?._id}`,
@@ -503,6 +503,7 @@ const Friends = () => {
                                     GroupName: "",
                                     NotiImage: "",
                                     NotiText: "sent you a friend request",
+                                    FriendRequestID: `${data.follow.message}`,
                                   },
                                   NotiReference: NotiReference.Request,
                                 });

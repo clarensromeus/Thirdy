@@ -13,8 +13,10 @@ import ListItemAvatar from "@mui/material/ListItemAvatar";
 import Checkbox from "@mui/material/Checkbox";
 import Avatar from "@mui/material/Avatar";
 import Button from "@mui/material/Button";
-import __ from "lodash";
+import grey from "@mui/material/colors/grey";
+import { isEqual, isEmpty, debounce } from "lodash";
 import { useReactiveVar } from "@apollo/client";
+import { useRecoilValue } from "recoil";
 import { ClipLoader } from "react-spinners";
 import { useQuery, useMutation } from "@apollo/client";
 // internally crafted imports of resources
@@ -31,6 +33,9 @@ import { CssTextFieldShare } from "../../MuiStyles/textField";
 import useNotification from "../../hooks/useNotifications";
 import { Authentication } from "../../Global/GlobalAuth";
 import { NotiReference } from "../../Enums";
+import { IMode } from "../../typings/GlobalState";
+import modeContext from "../../store/ModeContext";
+import useWindowSize from "../../hooks/useWindowSize";
 
 const SharePostWithGroup = ({
   openGroupFrame,
@@ -38,7 +43,9 @@ const SharePostWithGroup = ({
   id,
   GroupInfo: { _id, PostId, Title, userId },
 }: IShareDataWithGroup) => {
+  const modeContextData = React.useContext(modeContext);
   const [checked, setChecked] = React.useState<string[]>([]);
+  const [search, setSearch] = React.useState<string>("");
 
   const handleToggle = (value: string) => () => {
     const currentIndex = checked.indexOf(value);
@@ -64,11 +71,33 @@ const SharePostWithGroup = ({
     SharePostWithGroupMutationVariables
   >(SHARE_POST_WITH_GROUPS);
 
+  const handleChangeEvent = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const target = event.target as typeof event.target & {
+      value: { value: string };
+    };
+    setSearch(target.value);
+  };
+
+  const debounceSearchResult = React.useMemo(() => {
+    return debounce(handleChangeEvent, 1000);
+  }, [search]);
+
   const isAuth = useReactiveVar(Authentication);
   const { CreateNotification, PushNotification } = useNotification();
 
+  const mode = useRecoilValue<IMode>(modeContextData.GetMode);
+
+  const { width, height } = useWindowSize();
+
   // push real time notifications
   PushNotification({ isAuth: isAuth.isLoggedIn });
+
+  React.useEffect(() => {
+    return () => {
+      // cleanup debounce search for re-rendering prevention
+      debounceSearchResult.cancel();
+    };
+  });
 
   return (
     <>
@@ -90,9 +119,9 @@ const SharePostWithGroup = ({
             top: "50%",
             left: "50%",
             transform: "translate(-50%, -50%)",
-            bgcolor: "white",
-            width: 590,
-            height: 480,
+            bgcolor: isEqual(mode.mode, "light") ? "white" : "black",
+            width: width && width <= 650 ? "100%" : 590,
+            height: width && width <= 650 ? "100%" : 480,
           }}
         >
           <Box
@@ -104,34 +133,60 @@ const SharePostWithGroup = ({
             }}
           >
             <Box sx={{ alignSelf: "center" }}>
-              <Typography fontSize="1.3em" fontWeight="bold">
+              <Typography
+                fontSize="1.3em"
+                fontWeight="bold"
+                color={isEqual(mode.mode, "light") ? "black" : grey[100]}
+              >
                 Share with groups
               </Typography>
             </Box>
             <Box pl={20}>
               <IconButton
-                sx={{ bgcolor: "rgba(232,240,254, 0.8)" }}
+                sx={{
+                  bgcolor: isEqual(mode.mode, "light")
+                    ? "rgba(232,240,254, 0.8)"
+                    : "rgba(255, 255,255, 0.2)",
+                }}
                 disableFocusRipple
                 disableRipple
                 disableTouchRipple
                 onClick={() => setOpenGroupFrame(false)}
               >
-                <CloseIcon sx={{ color: "black", fontSize: "1.5rem" }} />
+                <CloseIcon
+                  sx={{
+                    color: isEqual(mode.mode, "light") ? "black" : grey[100],
+                    fontSize: "1.5rem",
+                  }}
+                />
               </IconButton>
             </Box>
           </Box>
           <Divider />
           <Box p={2}>
             <CssTextFieldShare
-              sx={{ "& fieldset": { border: "none" } }}
+              sx={{
+                "& fieldset": { border: "none" },
+                bgcolor: isEqual(mode.mode, "light")
+                  ? "rgba(232,240,254, 0.8)"
+                  : "rgba(255, 255, 255, 0.2)",
+                borderRadius: 10,
+              }}
               variant="outlined"
               size="small"
               fullWidth
               placeholder="search a friend..."
+              onChange={debounceSearchResult}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <SearchIcon />
+                    <SearchIcon
+                      sx={{
+                        color: isEqual(mode.mode, "light")
+                          ? grey[700]
+                          : grey[400],
+                      }}
+                    />
                   </InputAdornment>
                 ),
               }}
@@ -159,11 +214,17 @@ const SharePostWithGroup = ({
                   position: "relative",
                   overflow: "auto",
                   maxHeight: 160,
-                  maxWidth: 570,
+                  maxWidth: width && width <= 650 ? "94%" : 570,
                   bgcolor: "background.paper",
                 }}
               >
-                {data?.GetAllGroups?.map((group) => {
+                {data?.GetAllGroups?.filter((groups) =>
+                  search.toLowerCase() === ""
+                    ? groups
+                    : groups?.GroupName?.toLowerCase().includes(
+                        search.toLowerCase()
+                      )
+                ).map((group) => {
                   return (
                     <ListItem
                       key={`${group._id}`}
@@ -182,7 +243,12 @@ const SharePostWithGroup = ({
                       </ListItemAvatar>
                       <ListItemText
                         primary={
-                          <Typography textTransform="capitalize">
+                          <Typography
+                            textTransform="capitalize"
+                            color={
+                              isEqual(mode.mode, "light") ? "black" : grey[100]
+                            }
+                          >
                             {group.GroupName}
                           </Typography>
                         }
@@ -201,7 +267,8 @@ const SharePostWithGroup = ({
               <Button
                 variant="contained"
                 fullWidth
-                disabled={__.isEmpty(checked) && true}
+                sx={{ bgcolor: isEqual(mode.mode, "light") ? "" : "#0866ff" }}
+                disabled={isEmpty(checked) && true}
                 onClick={async () => {
                   try {
                     await SharePostWithGroups({

@@ -2,6 +2,7 @@ import * as React from "react";
 // external imports of resources
 import Box from "@mui/material/Box";
 import AppBar from "@mui/material/AppBar";
+import Paper from "@mui/material/Paper";
 import Toolbar from "@mui/material/Toolbar";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
@@ -12,12 +13,24 @@ import blue from "@mui/material/colors/blue";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import Divider from "@mui/material/Divider";
 import grey from "@mui/material/colors/grey";
-import Icon from "@mui/material/Icon";
 import { Outlet } from "react-router-dom";
 import { useQuery } from "@apollo/client";
+import {
+  useNavigate,
+  NavigateFunction,
+  useLocation,
+  Location,
+} from "react-router-dom";
 import { useRecoilValue, useSetRecoilState } from "recoil";
 import { useJwt } from "react-jwt";
 import { isEqual } from "lodash";
+import BottomNavigation from "@mui/material/BottomNavigation";
+import BottomNavigationAction from "@mui/material/BottomNavigationAction";
+import HomeIcon from "@mui/icons-material/Home";
+import PeopleIcon from "@mui/icons-material/People";
+import GroupsIcon from "@mui/icons-material/Groups";
+import Icon from "@mui/material/Icon";
+import AddIcon from "@mui/icons-material/Add";
 import { useReactiveVar } from "@apollo/client";
 import { CircleLoader } from "react-spinners";
 // internally crafted imports of resources
@@ -46,6 +59,12 @@ const Home = (): JSX.Element => {
   const [open, setOpen] = React.useState<boolean>(false);
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
+  const [value, setValue] = React.useState<number>(0);
+  const location: Location = useLocation();
+
+  // a variable declaration to determine bottom navigation visibility
+  const locationLogics = location.pathname.split("/");
+
   // notifications popper state
   const [openNoti, setOpenNoti] = React.useState(false);
   const [anchorElNoti, setAnchorElNoti] = React.useState<null | HTMLElement>(
@@ -53,6 +72,10 @@ const Home = (): JSX.Element => {
   );
 
   const notifications = useReactiveVar(AllNotifications);
+
+  const { width, height } = useWindowSize();
+
+  const navigate: NavigateFunction = useNavigate();
 
   // event handler notifications popper
   const handleClickNoti = (event: React.MouseEvent<HTMLElement>) => {
@@ -165,7 +188,7 @@ const Home = (): JSX.Element => {
                 component="div"
                 sx={{
                   display: {
-                    xs: "none",
+                    xs: "block",
                     sm: "block",
                     fontFamily: "Roboto",
                     fontStyle: "italic",
@@ -177,48 +200,78 @@ const Home = (): JSX.Element => {
               >
                 thirdy
               </Typography>
-              <SearchBar />
-              <Box sx={{ flexGrow: 1 }} />
-              <Box>
-                <IconButton
-                  size="small"
-                  aria-label="show 4 new mails"
-                  disableRipple
-                  disableFocusRipple
-                >
-                  <Box
+              {width && width < 720 ? (
+                <Box sx={{ pl: 1 }}>
+                  <IconButton
                     sx={{
-                      p: "13px",
-                      display: "flex",
-                      justifyContent: "center",
+                      pl: 1,
                       bgcolor: isEqual(mode.mode, "light")
                         ? "#E8F0FE"
-                        : "rgba(255, 255, 255, 0.1)",
-                      borderRadius: 40,
+                        : "rgba(255,255, 255, 0.2)",
                     }}
                   >
-                    <Badge badgeContent={4} color="error">
-                      <Icon
-                        baseClassName="fas"
-                        className="fa-solid fa-comment"
-                        sx={{
-                          color: isEqual(mode.mode, "light")
-                            ? "black"
-                            : grey[200],
-                        }}
-                        fontSize="small"
-                      />
-                    </Badge>
-                  </Box>
-                </IconButton>
+                    <SearchIcon
+                      sx={{
+                        color: isEqual(mode.mode, "light")
+                          ? "black"
+                          : grey[100],
+                      }}
+                    />
+                  </IconButton>
+                </Box>
+              ) : (
+                <SearchBar />
+              )}
+              <Box sx={{ flexGrow: 1 }} />
+              <Box>
+                {width && width > 720 && (
+                  <IconButton
+                    size="small"
+                    aria-label="show 4 new mails"
+                    disableRipple
+                    disableFocusRipple
+                  >
+                    <Box
+                      sx={{
+                        p: "13px",
+                        display: "flex",
+                        justifyContent: "center",
+                        bgcolor: isEqual(mode.mode, "light")
+                          ? "#E8F0FE"
+                          : "rgba(255, 255, 255, 0.1)",
+                        borderRadius: 40,
+                      }}
+                    >
+                      <Badge badgeContent={4} color="error">
+                        <Icon
+                          baseClassName="fas"
+                          className="fa-solid fa-comment"
+                          sx={{
+                            color: isEqual(mode.mode, "light")
+                              ? "black"
+                              : grey[200],
+                          }}
+                          fontSize="small"
+                        />
+                      </Badge>
+                    </Box>
+                  </IconButton>
+                )}
+
                 <IconButton
                   size="small"
                   aria-label="show 17 new notifications"
                   disableRipple
                   disableFocusRipple
+                  sx={{
+                    bgcolor: isEqual(mode.mode, "light")
+                      ? "#E8F0FE"
+                      : "rgba(255, 255, 255, 0.1)",
+                    p: 1,
+                  }}
                   onClick={handleClickNoti}
                 >
-                  <Box
+                  {/* <Box
                     sx={{
                       p: "13px",
                       display: "flex",
@@ -228,26 +281,26 @@ const Home = (): JSX.Element => {
                         : "rgba(255, 255, 255, 0.1)",
                       borderRadius: 40,
                     }}
+                  > */}
+                  <Badge
+                    badgeContent={
+                      notifications.Notifications.filter((notification) =>
+                        notification.ReceiverId?.includes(
+                          `${AuthInfo.Data?._id}`
+                        )
+                      ).length ?? 0
+                    }
+                    color="error"
                   >
-                    <Badge
-                      badgeContent={
-                        notifications.Notifications.filter((notification) =>
-                          notification.ReceiverId?.includes(
-                            `${AuthInfo.Data?._id}`
-                          )
-                        ).length ?? 0
-                      }
-                      color="error"
-                    >
-                      <NotificationsIcon
-                        sx={{
-                          color: isEqual(mode.mode, "light")
-                            ? "black"
-                            : grey[200],
-                        }}
-                      />
-                    </Badge>
-                  </Box>
+                    <NotificationsIcon
+                      sx={{
+                        color: isEqual(mode.mode, "light")
+                          ? "black"
+                          : grey[200],
+                      }}
+                    />
+                  </Badge>
+                  {/* </Box> */}
                 </IconButton>
                 <IconButton
                   onClick={handleClick}
@@ -256,7 +309,7 @@ const Home = (): JSX.Element => {
                   disableRipple
                 >
                   <Avatar
-                    sx={{ width: 50, height: 50 }}
+                    sx={{ width: 40, height: 40 }}
                     alt=""
                     src={`${data?.userData?.Image}`}
                   />
@@ -266,7 +319,59 @@ const Home = (): JSX.Element => {
             </Toolbar>
             <Divider />
           </AppBar>
-          <AppDrawer />
+          {width && width < 1000 && locationLogics.length !== 4 ? (
+            <Paper
+              sx={{
+                position: "fixed",
+                bottom: 0,
+                left: 0,
+                right: 0,
+                zIndex: (theme) => theme.zIndex.appBar + 100,
+              }}
+              elevation={3}
+            >
+              <BottomNavigation
+                showLabels
+                value={value}
+                onChange={(event, newValue) => {
+                  setValue(newValue);
+                }}
+                sx={{}}
+              >
+                <BottomNavigationAction label="Home" icon={<HomeIcon />} />
+                <BottomNavigationAction
+                  label="Groups"
+                  icon={<GroupsIcon onClick={() => navigate("groups")} />}
+                />
+
+                <BottomNavigationAction
+                  label="Add Status"
+                  icon={<AddIcon />}
+                  onClick={() => navigate("status")}
+                />
+                <BottomNavigationAction
+                  onClick={() => navigate("chat")}
+                  label="Chat"
+                  icon={
+                    <Icon
+                      sx={{}}
+                      baseClassName="fas"
+                      className="fa-solid fa-comment"
+                      fontSize="small"
+                    />
+                  }
+                />
+                <BottomNavigationAction
+                  label="Friends"
+                  onClick={() => navigate("friends")}
+                  icon={<PeopleIcon />}
+                />
+              </BottomNavigation>
+            </Paper>
+          ) : (
+            <AppDrawer />
+          )}
+
           <Box component="main" sx={{ flexGrow: 1 }}>
             <Toolbar />
             <Outlet />

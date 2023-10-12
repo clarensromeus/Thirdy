@@ -157,7 +157,7 @@ const Friends: Resolvers = {
         }
 
         return {
-          message: "request sent",
+          message: `${friendRequest._id}`,
           success: true,
         };
       } catch (error) {

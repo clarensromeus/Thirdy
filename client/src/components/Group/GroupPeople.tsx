@@ -38,6 +38,7 @@ import useNotification from "../../hooks/useNotifications";
 import { IS_AUTH } from "../../LocalQueries/isAuth";
 import { IAuthentication } from "../../typings/Authentication";
 import { NotiReference } from "../../Enums";
+import useWindowSize from "../../hooks/useWindowSize";
 
 const GroupPeople = (): JSX.Element => {
   const contextData = React.useContext(Context);
@@ -47,6 +48,7 @@ const GroupPeople = (): JSX.Element => {
   const [search, setSearch] = React.useState<string>("");
 
   let { groupname } = useParams<{ groupname: string }>();
+  const { width, height } = useWindowSize();
 
   const AuthInfo = useRecoilValue<Partial<IAuthState>>(contextData.GetAuthInfo);
   const mode = useRecoilValue<IMode>(modeContextData.GetMode);
@@ -100,7 +102,7 @@ const GroupPeople = (): JSX.Element => {
     <>
       <Box sx={{ display: "flex", justifyContent: "center" }}>
         <Paper
-          sx={{ width: 570, borderRadius: 4 }}
+          sx={{ width: width && width <= 720 ? "100%" : 570, borderRadius: 4 }}
           elevation={isEqual(mode.mode, "light") ? 2 : 0}
         >
           <Box sx={{ width: "100%" }}>

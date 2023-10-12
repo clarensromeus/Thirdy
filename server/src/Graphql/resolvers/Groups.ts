@@ -404,7 +404,7 @@ const Group: Resolvers = {
   Subscription: {
     ChatWithFriendsInGroups: {
       subscribe: (__, args, { user, isAuth }) => {
-        if (!user && isAuth) {
+        if (!user && !isAuth) {
           throw new GraphQLError("sorry, you're not an authorized user", {
             extensions: {
               code: UNAUTHORIZED,

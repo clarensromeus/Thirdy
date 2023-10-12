@@ -51,6 +51,7 @@ import useNotification from "../../hooks/useNotifications";
 import { Authentication } from "../../Global/GlobalAuth";
 import { ALL_FRIENDS } from "../../graphql/Friends.graphql";
 import { NotiReference } from "../../Enums";
+import useWindowSize from "../../hooks/useWindowSize";
 
 // it allows to have access to actual date from dayjs
 dayjs.extend(relativeTime);
@@ -79,6 +80,7 @@ const GroupChat = () => {
   const textPlacement: number = Math.floor(Math.random() * 20);
 
   const ScrollToTheBottom = React.useRef<HTMLDivElement | null>(null);
+  const { width, height } = useWindowSize()
 
   const [sendChat, { loading }] = useMutation<
     SendChatInGroupMutation,

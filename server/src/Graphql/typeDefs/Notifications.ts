@@ -28,6 +28,7 @@ export default gql`
     isGroup: Boolean
     NotiText: String
     NotiImage: String
+    FriendRequestID: String
   }
 
   input NotiData {
@@ -49,6 +50,7 @@ export default gql`
     GroupName: String
     NotiText: String
     NotiImage: String
+    FriendRequestID: String
   }
 
   type User {

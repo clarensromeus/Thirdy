@@ -77,7 +77,7 @@ const ListOfFriends: React.FC<IDrawer> = ({ DialogOpen, CloseDialog }) => {
   };
 
   const debounceSearchResult = React.useMemo(() => {
-    return debounce(handleChangeEvent, 200);
+    return debounce(handleChangeEvent, 1000);
   }, [search]);
 
   const [follow, { loading }] = useMutation<
@@ -134,7 +134,7 @@ const ListOfFriends: React.FC<IDrawer> = ({ DialogOpen, CloseDialog }) => {
                   size="small"
                   fullWidth
                   placeholder="search friends..."
-                  onChange={handleChangeEvent}
+                  onChange={debounceSearchResult}
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
