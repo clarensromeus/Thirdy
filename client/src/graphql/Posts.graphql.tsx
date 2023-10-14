@@ -20,6 +20,9 @@ const Get_All_Post = gql`
         }
         isGroup
         isRetweeted
+        RetweetedRating {
+          _id
+        }
         RetweetedPost {
           _id
           PostImage

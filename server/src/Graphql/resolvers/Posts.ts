@@ -28,7 +28,7 @@ import { IPagination } from "../../typings/post.ts";
 const __filename: string = fileURLToPath(import.meta.url);
 const __dirname: string = dirname(__filename);
 
-const { isNil, isEqual, isUndefined, lt, size } = lodash;
+const { isNil, isEqual, isUndefined, lt, size, pick } = lodash;
 
 const pubSub: PubSub = new PubSub();
 
@@ -68,6 +68,7 @@ const Post: Resolvers = {
               select: "_id Firstname Lastname Image",
             },
           })
+          .populate({path: "RetweetedRating", select: "_id"})
           .sort({ _id: -1 })
           .limit(limit);
 
@@ -113,6 +114,7 @@ const Post: Resolvers = {
           .findOne()
           .populate({ path: "User", select: "_id Firstname Lastname Image" })
           .where({ PostId });
+
 
         return postInfo;
       } catch (error) {

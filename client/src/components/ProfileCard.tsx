@@ -75,6 +75,8 @@ import { ICard } from "../typings/Notifications";
 import { ImoreActionProps } from "../typings/Post";
 import { NotiReference } from "../Enums";
 import { Authentication } from "../Global/GlobalAuth";
+import LastLikesPerson from "./LastLikesPerson";
+import { ILastLIkes } from "../typings/Post";
 
 export default function ProfileCard({ width }: ICard) {
   /* ___________Component logics_____________ */
@@ -212,8 +214,15 @@ export default function ProfileCard({ width }: ICard) {
           );
           // grab the last post comment
           const LastComment = last(comments);
+
           // grab the last three comments
-          const LastThreeLikes = slice(likes, 0, -1);
+          const LastThreeLikes = slice(likes);
+
+          const LastLikesData: ILastLIkes = {
+            likes: {
+              Likes: LastThreeLikes,
+            },
+          };
 
           // date from the time which the post was released
           const date: string = dayjs(`${createdAt}`).fromNow();
@@ -513,17 +522,7 @@ export default function ProfileCard({ width }: ICard) {
                   mb={0.4}
                   sx={{ display: "flex", gap: 1, alignItems: "center", ml: 1 }}
                 >
-                  <Box>
-                    <Typography component="span" style={{ color: blue[600] }}>
-                      8.3k
-                    </Typography>{" "}
-                    <span>people,</span>
-                  </Box>
-                  <Box>
-                    <span style={{ fontWeight: "bold" }}>you </span> and
-                    <span style={{ fontWeight: "bold" }}> jhonny</span> likes
-                    your post
-                  </Box>
+                  <LastLikesPerson {...LastLikesData} />
                 </Box>
                 <Divider />
                 <CardActions
@@ -583,44 +582,51 @@ export default function ProfileCard({ width }: ICard) {
                                   query: ALL_POST_LIKES,
                                 });
 
-                              const isAlreadyLikeById =
-                                cacheData?.PostLikes.map(
-                                  (likes) => likes.User?._id
-                                ).includes(`${AuthInfo.Data?._id}`);
+                              const allRelatedPosts =
+                                cacheData?.PostLikes.filter((likes) => {
+                                  return (
+                                    likes.PostId === data?.PostLikes?.PostId
+                                  );
+                                });
 
-                              const isAlreadyLikeByPostId =
-                                cacheData?.PostLikes.map(
-                                  (likes) => likes.PostId
-                                ).includes(`${data?.PostLikes?.PostId}`);
+                              const isUserAlreadyLike = allRelatedPosts
+                                ?.map((likes) => likes.User?._id)
+                                .includes(`${AuthInfo.Data?._id}`);
 
-                              if (isAlreadyLikeById && isAlreadyLikeByPostId) {
+                              if (isUserAlreadyLike) {
+                                const userlikeId = allRelatedPosts?.filter(
+                                  (likes) => {
+                                    return (
+                                      likes.User?._id ===
+                                      `${data?.PostLikes?.User?._id}`
+                                    );
+                                  }
+                                )[0];
+                                // if post is already liked by the user
+                                // remove the user
                                 cache.writeQuery({
                                   query: ALL_POST_LIKES,
                                   data: {
                                     PostLikes: cacheData?.PostLikes.filter(
                                       (likes) => {
-                                        return (
-                                          likes.PostId !==
-                                            data?.PostLikes?.PostId &&
-                                          likes.User?._id !==
-                                            `${AuthInfo.Data?._id}`
-                                        );
+                                        return likes._id !== userlikeId?._id;
                                       }
                                     ),
                                   },
                                 });
                               } else {
-                                if (!cacheData) return [];
-
-                                cache.writeQuery({
-                                  query: ALL_POST_LIKES,
-                                  data: {
-                                    PostLikes: [
-                                      ...cacheData?.PostLikes,
-                                      data?.PostLikes,
-                                    ],
-                                  },
-                                });
+                                // else add another like
+                                if (cacheData) {
+                                  cache.writeQuery({
+                                    query: ALL_POST_LIKES,
+                                    data: {
+                                      PostLikes: [
+                                        ...cacheData.PostLikes,
+                                        data?.PostLikes,
+                                      ],
+                                    },
+                                  });
+                                }
                               }
                             },
                           });
@@ -734,7 +740,7 @@ export default function ProfileCard({ width }: ICard) {
                     >
                       <ReplyAllIcon />
                     </IconButton>
-                    <span>980</span>
+                    <span>6</span>
                   </Box>
                 </CardActions>
                 <Divider />

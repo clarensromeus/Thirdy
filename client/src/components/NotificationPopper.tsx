@@ -217,14 +217,25 @@ const NotiPopper = ({ openNoti, anchorElNoti }: INotiPopperProps) => {
                         </Box>
                         <Box sx={{ display: "flex", flexDirection: "column" }}>
                           <Box sx={{}}>
-                            <Typography
-                              fontWeight="600"
-                              fontSize="15px"
-                              component="span"
-                            >
-                              {notifications.SenderInfo?.Firstname}{" "}
-                              {notifications.SenderInfo?.Lastname}
-                            </Typography>
+                            {notifications.SenderInfo?._id ===
+                            `${AuthInfo.Data?._id}` ? (
+                              <Typography
+                                fontWeight="600"
+                                fontSize="15px"
+                                component="span"
+                              >
+                                you{" "}
+                              </Typography>
+                            ) : (
+                              <Typography
+                                fontWeight="600"
+                                fontSize="15px"
+                                component="span"
+                              >
+                                {notifications.SenderInfo?.Firstname}{" "}
+                                {notifications.SenderInfo?.Lastname}
+                              </Typography>
+                            )}
                             <Typography color="text.secondary" component="span">
                               {" "}
                               {isEqual(notifications.NotiReference, "likes")
@@ -406,7 +417,10 @@ const NotiPopper = ({ openNoti, anchorElNoti }: INotiPopperProps) => {
                               )}
                             </Typography>
                           </Box>
-                          {isEqual(notifications.NotiReference, "request") && (
+                          {isEqual(
+                            notifications.NotiReference,
+                            "requested"
+                          ) && (
                             <Box>
                               <Typography
                                 color="text.secondary"
@@ -419,7 +433,10 @@ const NotiPopper = ({ openNoti, anchorElNoti }: INotiPopperProps) => {
                               </Typography>
                             </Box>
                           )}
-                          {isEqual(notifications.NotiReference, "request") && (
+                          {isEqual(
+                            notifications.NotiReference,
+                            "requested"
+                          ) && (
                             <Box
                               sx={{
                                 display: "flex",

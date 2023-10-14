@@ -97,7 +97,6 @@ const Profile = () => {
 
   return (
     <>
-      <span>{width}</span>
       <UploadFrame {...Frame} />
       <Box sx={{ width: "100%", height: "100vh", p: 0, m: 0 }}>
         <Box

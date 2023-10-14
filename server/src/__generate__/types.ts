@@ -369,6 +369,7 @@ export type PostInfo = {
   PostImage?: Maybe<Scalars['String']['output']>;
   PublicId?: Maybe<Scalars['String']['output']>;
   RetweetedPost?: Maybe<RetweetedPost>;
+  RetweetedRating?: Maybe<Array<Maybe<Rating>>>;
   Title?: Maybe<Scalars['String']['output']>;
   User?: Maybe<User>;
   _id?: Maybe<Scalars['MongoId']['output']>;
@@ -752,6 +753,11 @@ export type PostResponse = {
   success?: Maybe<Scalars['Boolean']['output']>;
 };
 
+export type Rating = {
+  __typename?: 'rating';
+  _id?: Maybe<Scalars['MongoId']['output']>;
+};
+
 export type RegisterInfo = {
   Bio?: InputMaybe<Scalars['String']['input']>;
   DOB: Scalars['String']['input'];
@@ -972,6 +978,7 @@ export type ResolversTypes = {
   online: ResolverTypeWrapper<Online>;
   postEntries: PostEntries;
   postResponse: ResolverTypeWrapper<PostResponse>;
+  rating: ResolverTypeWrapper<Rating>;
   registerInfo: RegisterInfo;
   request: Request;
   retweetData: RetweetData;
@@ -1037,6 +1044,7 @@ export type ResolversParentTypes = {
   online: Online;
   postEntries: PostEntries;
   postResponse: PostResponse;
+  rating: Rating;
   registerInfo: RegisterInfo;
   request: Request;
   retweetData: RetweetData;
@@ -1173,6 +1181,7 @@ export type PostInfoResolvers<ContextType = any, ParentType extends ResolversPar
   PostImage?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   PublicId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   RetweetedPost?: Resolver<Maybe<ResolversTypes['retweetedPost']>, ParentType, ContextType>;
+  RetweetedRating?: Resolver<Maybe<Array<Maybe<ResolversTypes['rating']>>>, ParentType, ContextType>;
   Title?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   User?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>;
   _id?: Resolver<Maybe<ResolversTypes['MongoId']>, ParentType, ContextType>;
@@ -1377,6 +1386,11 @@ export type PostResponseResolvers<ContextType = any, ParentType extends Resolver
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type RatingResolvers<ContextType = any, ParentType extends ResolversParentTypes['rating'] = ResolversParentTypes['rating']> = {
+  _id?: Resolver<Maybe<ResolversTypes['MongoId']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type RetweetedPostResolvers<ContextType = any, ParentType extends ResolversParentTypes['retweetedPost'] = ResolversParentTypes['retweetedPost']> = {
   PostImage?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   Title?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
@@ -1474,6 +1488,7 @@ export type Resolvers<ContextType = any> = {
   messageResponse?: MessageResponseResolvers<ContextType>;
   online?: OnlineResolvers<ContextType>;
   postResponse?: PostResponseResolvers<ContextType>;
+  rating?: RatingResolvers<ContextType>;
   retweetedPost?: RetweetedPostResolvers<ContextType>;
   statusResponse?: StatusResponseResolvers<ContextType>;
   suggestions?: SuggestionsResolvers<ContextType>;

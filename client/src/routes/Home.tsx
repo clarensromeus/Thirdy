@@ -54,6 +54,7 @@ import modeContext from "../store/ModeContext";
 import SearchBar from "../components/MainSearch";
 import useWindowSize from "../hooks/useWindowSize";
 import { AllNotifications } from "../Global/GlobalNotifications";
+import BottomMobileNavigation from "../components/BottomNavigation";
 
 const Home = (): JSX.Element => {
   const [open, setOpen] = React.useState<boolean>(false);
@@ -223,38 +224,32 @@ const Home = (): JSX.Element => {
                 <SearchBar />
               )}
               <Box sx={{ flexGrow: 1 }} />
-              <Box>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1.2 }}>
                 {width && width > 720 && (
                   <IconButton
                     size="small"
                     aria-label="show 4 new mails"
                     disableRipple
                     disableFocusRipple
+                    sx={{
+                      bgcolor: isEqual(mode.mode, "light")
+                        ? "#E8F0FE"
+                        : "rgba(255, 255, 255, 0.1)",
+                      p: 1.2,
+                    }}
                   >
-                    <Box
-                      sx={{
-                        p: "13px",
-                        display: "flex",
-                        justifyContent: "center",
-                        bgcolor: isEqual(mode.mode, "light")
-                          ? "#E8F0FE"
-                          : "rgba(255, 255, 255, 0.1)",
-                        borderRadius: 40,
-                      }}
-                    >
-                      <Badge badgeContent={4} color="error">
-                        <Icon
-                          baseClassName="fas"
-                          className="fa-solid fa-comment"
-                          sx={{
-                            color: isEqual(mode.mode, "light")
-                              ? "black"
-                              : grey[200],
-                          }}
-                          fontSize="small"
-                        />
-                      </Badge>
-                    </Box>
+                    <Badge badgeContent={4} color="error">
+                      <Icon
+                        baseClassName="fas"
+                        className="fa-solid fa-comment"
+                        sx={{
+                          color: isEqual(mode.mode, "light")
+                            ? "black"
+                            : grey[200],
+                        }}
+                        fontSize="small"
+                      />
+                    </Badge>
                   </IconButton>
                 )}
 
@@ -271,17 +266,6 @@ const Home = (): JSX.Element => {
                   }}
                   onClick={handleClickNoti}
                 >
-                  {/* <Box
-                    sx={{
-                      p: "13px",
-                      display: "flex",
-                      justifyContent: "center",
-                      bgcolor: isEqual(mode.mode, "light")
-                        ? "#E8F0FE"
-                        : "rgba(255, 255, 255, 0.1)",
-                      borderRadius: 40,
-                    }}
-                  > */}
                   <Badge
                     badgeContent={
                       notifications.Notifications.filter((notification) =>
@@ -320,54 +304,7 @@ const Home = (): JSX.Element => {
             <Divider />
           </AppBar>
           {width && width < 1000 && locationLogics.length !== 4 ? (
-            <Paper
-              sx={{
-                position: "fixed",
-                bottom: 0,
-                left: 0,
-                right: 0,
-                zIndex: (theme) => theme.zIndex.appBar + 100,
-              }}
-              elevation={3}
-            >
-              <BottomNavigation
-                showLabels
-                value={value}
-                onChange={(event, newValue) => {
-                  setValue(newValue);
-                }}
-                sx={{}}
-              >
-                <BottomNavigationAction label="Home" icon={<HomeIcon />} />
-                <BottomNavigationAction
-                  label="Groups"
-                  icon={<GroupsIcon onClick={() => navigate("groups")} />}
-                />
-
-                <BottomNavigationAction
-                  label="Add Status"
-                  icon={<AddIcon />}
-                  onClick={() => navigate("status")}
-                />
-                <BottomNavigationAction
-                  onClick={() => navigate("chat")}
-                  label="Chat"
-                  icon={
-                    <Icon
-                      sx={{}}
-                      baseClassName="fas"
-                      className="fa-solid fa-comment"
-                      fontSize="small"
-                    />
-                  }
-                />
-                <BottomNavigationAction
-                  label="Friends"
-                  onClick={() => navigate("friends")}
-                  icon={<PeopleIcon />}
-                />
-              </BottomNavigation>
-            </Paper>
+            <BottomMobileNavigation />
           ) : (
             <AppDrawer />
           )}

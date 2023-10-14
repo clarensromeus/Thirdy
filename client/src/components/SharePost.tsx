@@ -9,15 +9,14 @@ import {
 } from "@mui/material";
 import GroupsIcon from "@mui/icons-material/Groups";
 import { IRetweetProps } from "../typings/Post";
+import grey from "@mui/material/colors/grey";
 import PeopleIcon from "@mui/icons-material/People";
-import {
-  useRecoilBridgeAcrossReactRoots_UNSTABLE,
-  useRecoilValue,
-} from "recoil";
+import { useRecoilValue } from "recoil";
 import { nanoid } from "nanoid";
 import { useMutation } from "@apollo/client";
 import { ClipLoader } from "react-spinners";
 import { useReactiveVar } from "@apollo/client";
+import { isEqual } from "lodash";
 // internally crafted imports of resources
 import Context from "../store/ContextApi";
 import { IAuthState } from "../typings/GlobalState";
@@ -38,6 +37,8 @@ import SharePostWithGroup from "./Group/ShareWithGroup";
 import useNotification from "../hooks/useNotifications";
 import { Authentication } from "../Global/GlobalAuth";
 import { NotiReference } from "../Enums";
+import { IMode } from "../typings/GlobalState";
+import modeContext from "../store/ModeContext";
 
 const Retweet = ({
   anchorEl,
@@ -46,10 +47,13 @@ const Retweet = ({
   PostInfo: { _id, PostId, Image, Title, userId },
 }: IRetweetProps): JSX.Element => {
   const contextData = React.useContext(Context);
+  const modeContextData = React.useContext(modeContext);
 
   const [openFrame, setOpenFrame] = React.useState<boolean>(false);
   const [openGroupFrame, setOpenGroupFrame] = React.useState<boolean>(false);
   const AuthInfo = useRecoilValue<Partial<IAuthState>>(contextData.GetAuthInfo);
+
+  const mode = useRecoilValue<IMode>(modeContextData.GetMode);
 
   const shareData: IShareDataWithFriend = {
     openFrame,
@@ -118,7 +122,7 @@ const Retweet = ({
                 p: 0,
                 m: 0,
                 border: "none",
-                bgcolor: "white",
+                bgcolor: isEqual(mode.mode, "light") ? "white" : "black",
               }}
               onClick={(event) => {
                 setOpenFrame(true);
@@ -128,11 +132,22 @@ const Retweet = ({
             >
               <Box>
                 <IconButton sx={{ m: 0, p: 0 }}>
-                  <PeopleIcon sx={{ color: "black" }} />
+                  <PeopleIcon
+                    sx={{
+                      color: isEqual(mode.mode, "light") ? "black" : grey[100],
+                    }}
+                  />
                 </IconButton>
               </Box>
               <Box>
-                <Typography fontWeight="bold">Share with friends</Typography>
+                <Typography
+                  fontWeight="bold"
+                  sx={{
+                    color: isEqual(mode.mode, "light") ? "black" : grey[100],
+                  }}
+                >
+                  Share with friends
+                </Typography>
               </Box>
             </Box>
             <Box
@@ -140,7 +155,7 @@ const Retweet = ({
                 display: "flex",
                 gap: 2,
                 alignItems: "center",
-                bgcolor: "white",
+                bgcolor: isEqual(mode.mode, "light") ? "white" : "black",
                 border: "none",
                 p: 0,
                 m: 0,
@@ -152,12 +167,29 @@ const Retweet = ({
               component="button"
             >
               <Box>
-                <IconButton sx={{ m: 0, p: 0, bgcolor: "white" }}>
-                  <GroupsIcon sx={{ color: "black" }} />
+                <IconButton
+                  sx={{
+                    m: 0,
+                    p: 0,
+                    bgcolor: isEqual(mode.mode, "light") ? "white" : grey[100],
+                  }}
+                >
+                  <GroupsIcon
+                    sx={{
+                      color: isEqual(mode.mode, "light") ? "black" : grey[100],
+                    }}
+                  />
                 </IconButton>
               </Box>
               <Box>
-                <Typography fontWeight="bold">Share with groups</Typography>
+                <Typography
+                  fontWeight="bold"
+                  sx={{
+                    color: isEqual(mode.mode, "light") ? "black" : grey[100],
+                  }}
+                >
+                  Share with groups
+                </Typography>
               </Box>
             </Box>
             <Box
@@ -168,7 +200,7 @@ const Retweet = ({
                 m: 0,
                 p: 0,
                 border: "none",
-                bgcolor: "white",
+                bgcolor: isEqual(mode.mode, "light") ? "white" : "black",
               }}
               component="button"
               onClick={async () => {
@@ -232,7 +264,9 @@ const Retweet = ({
                   <IconButton sx={{ m: 0, p: 0 }}>
                     <Icon
                       sx={{
-                        color: "black",
+                        color: isEqual(mode.mode, "light")
+                          ? "black"
+                          : grey[100],
                       }}
                       baseClassName="fas"
                       className="fa-thin fa-retweet"
@@ -242,7 +276,14 @@ const Retweet = ({
                 )}
               </Box>
               <Box>
-                <Typography fontWeight="bold">Just retweet</Typography>
+                <Typography
+                  fontWeight="bold"
+                  sx={{
+                    color: isEqual(mode.mode, "light") ? "black" : grey[100],
+                  }}
+                >
+                  Just retweet
+                </Typography>
               </Box>
             </Box>
           </Box>

@@ -8,15 +8,15 @@ import { ILike } from "../typings/Post";
 import Context from "../store/ContextApi";
 import { IAuthState } from "../typings/GlobalState";
 
-const fakeRandomNumber = Math.floor(Math.random() * 9);
-
 const LastLikesPerson = ({ likes }: { likes: ILike }): JSX.Element => {
   // grab the first person who likes your post
   const firstPerson = get(likes, `Likes[0]`);
+  // grab the third recent person who likes the post
+  const thirdRecentPerson = get(likes, `Likes[${likes.Likes.length - 3}]`);
   // grab the second recent person who likes your post
   const secondPerson = get(likes, `Likes[${likes.Likes.length - 2}]`);
   // grab the last person who likes your post
-  const thirdPerson = get(likes, `Likes[${likes.Likes.length - 1}]`);
+  const lastPerson = get(likes, `Likes[${likes.Likes.length - 1}]`);
 
   const contextData = React.useContext(Context);
   const AuthInfo = useRecoilValue<Partial<IAuthState>>(contextData.GetAuthInfo);
@@ -27,21 +27,21 @@ const LastLikesPerson = ({ likes }: { likes: ILike }): JSX.Element => {
         <Box sx={{ display: "flex", alignItems: "center" }}>
           <Box>
             <Typography component="span" style={{ color: blue[600] }}>
-              {likes.Likes.length}.{fakeRandomNumber}k{" "}
+              {likes.Likes.length}.9k{" "}
             </Typography>
             <span>people,</span>
           </Box>
           <Box>
             <span style={{ fontWeight: "bold" }}>
               {secondPerson.User?._id === `${AuthInfo.Data?._id}`
-                ? "you"
+                ? "you".padEnd(1, " ")
                 : secondPerson.User?.Firstname}
             </span>{" "}
-            and
+            and{" "}
             <span style={{ fontWeight: "bold" }}>
-              {thirdPerson.User?._id === `${AuthInfo.Data?._id}`
+              {lastPerson.User?._id === `${AuthInfo.Data?._id}`
                 ? "you"
-                : thirdPerson.User?.Firstname}
+                : lastPerson.User?.Firstname}
             </span>{" "}
             like the post
           </Box>
@@ -50,21 +50,29 @@ const LastLikesPerson = ({ likes }: { likes: ILike }): JSX.Element => {
         <Box sx={{ display: "flex", alignItems: "center" }}>
           <Box>
             <Typography component="span" style={{ color: blue[600] }}>
-              {likes.Likes.length}.{fakeRandomNumber}k{" "}
+              {likes.Likes.length}.9k{" "}
             </Typography>
             <span>people,</span>
           </Box>
           <Box>
             <span style={{ fontWeight: "bold" }}>
-              {secondPerson.User?._id ? "you" : secondPerson.User?.Firstname}
+              {thirdRecentPerson.User?._id === `${AuthInfo.Data?._id}`
+                ? "you".padEnd(1, " ")
+                : thirdRecentPerson.User?.Firstname}
+              ,
             </span>{" "}
-            and
             <span style={{ fontWeight: "bold" }}>
-              {thirdPerson.User?._id === `${AuthInfo.Data?._id}`
-                ? "you".padStart(1, " ")
-                : thirdPerson.User?.Lastname}
+              {secondPerson.User?._id === `${AuthInfo.Data?._id}`
+                ? "you".padEnd(1, " ")
+                : secondPerson.User?.Firstname}
             </span>{" "}
-            and {likes.Likes.length - 2} like the post
+            and{" "}
+            <span style={{ fontWeight: "bold" }}>
+              {lastPerson.User?._id === `${AuthInfo.Data?._id}`
+                ? "you".padEnd(1, " ")
+                : lastPerson.User?.Lastname}
+            </span>{" "}
+            like the post
           </Box>
         </Box>
       ) : isUndefined(likes.Likes) || likes.Likes.length === 0 ? (
@@ -77,7 +85,7 @@ const LastLikesPerson = ({ likes }: { likes: ILike }): JSX.Element => {
         <Box>
           <span style={{ fontWeight: "bold" }}>
             {firstPerson.User?._id === `${AuthInfo.Data?._id}`
-              ? "you"
+              ? "you".padEnd(1, " ")
               : firstPerson.User?.Lastname}
           </span>{" "}
           like the post

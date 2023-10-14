@@ -404,8 +404,8 @@ const Chat = () => {
               </Box>
             ))}
 
-          {(width && width >= 720) ||
-            (locationLogic.length === 4 && (
+          {gt(width, 720) ||
+            (isEqual(locationLogic.length, 4) && (
               <Box sx={{ flex: width && width < 720 ? 1 : 2.5 }}>
                 <Outlet context={{ friendData } satisfies ContextType} />
               </Box>

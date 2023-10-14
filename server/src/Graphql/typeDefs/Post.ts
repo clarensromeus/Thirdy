@@ -116,6 +116,10 @@ export default gql`
     createdAt: Date
   }
 
+  type rating {
+    _id: MongoId
+  }
+
   type PostInfo {
     _id: MongoId
     PostId: String!
@@ -125,6 +129,7 @@ export default gql`
     User: User
     isGroup: Boolean
     isRetweeted: Boolean
+    RetweetedRating: [rating]
     RetweetedPost: retweetedPost
     createdAt: Date
   }

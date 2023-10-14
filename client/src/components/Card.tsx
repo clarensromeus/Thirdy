@@ -83,8 +83,7 @@ import { ImoreActionProps } from "../typings/Post";
 import { NotiReference } from "../Enums";
 import { Authentication } from "../Global/GlobalAuth";
 import LastLikesPerson from "./LastLikesPerson";
-import { ILike, ILastLIkes } from "../typings/Post";
-import useWindowSize from "../hooks/useWindowSize";
+import { ILastLIkes } from "../typings/Post";
 
 export default function CardPost({ width }: ICard) {
   /*______Queries helpers___________ */
@@ -210,6 +209,7 @@ export default function CardPost({ width }: ICard) {
             createdAt,
             isRetweeted,
             RetweetedPost,
+            RetweetedRating,
           } = value;
 
           const likes = allLikesData?.PostLikes.filter(
@@ -222,10 +222,7 @@ export default function CardPost({ width }: ICard) {
           // grab the last post comment
           const LastComment = last(comments);
           // grab the last three comments
-          const LastThreeLikes = slice(likes, -4, -1);
-
-          console.log("last three likes", LastThreeLikes);
-          console.log("likes", likes);
+          const LastThreeLikes = slice(likes);
 
           const LastLikesData: ILastLIkes = {
             likes: {
@@ -538,17 +535,6 @@ export default function CardPost({ width }: ICard) {
                   sx={{ display: "flex", gap: 1, alignItems: "center", ml: 1 }}
                 >
                   <LastLikesPerson {...LastLikesData} />
-                  {/* <Box>
-                    <Typography component="span" style={{ color: blue[600] }}>
-                      8.3k
-                    </Typography>{" "}
-                    <span>people,</span>
-                  </Box>
-                  <Box>
-                    <span style={{ fontWeight: "bold" }}>you </span> and
-                    <span style={{ fontWeight: "bold" }}> jhonny</span> likes
-                    your post
-                  </Box> */}
                 </Box>
                 <Divider />
                 <CardActions
@@ -608,17 +594,26 @@ export default function CardPost({ width }: ICard) {
                                   query: ALL_POST_LIKES,
                                 });
 
-                              const isAlreadyLikeById =
-                                cacheData?.PostLikes.map(
-                                  (likes) => likes.User?._id
-                                ).includes(`${AuthInfo.Data?._id}`);
+                              const allRelatedPosts =
+                                cacheData?.PostLikes.filter((likes) => {
+                                  return (
+                                    likes.PostId === data?.PostLikes?.PostId
+                                  );
+                                });
 
-                              const isAlreadyLikeByPostId =
-                                cacheData?.PostLikes.map(
-                                  (likes) => likes.PostId
-                                ).includes(`${data?.PostLikes?.PostId}`);
+                              const isUserAlreadyLike = allRelatedPosts
+                                ?.map((likes) => likes.User?._id)
+                                .includes(`${AuthInfo.Data?._id}`);
 
-                              if (isAlreadyLikeByPostId && isAlreadyLikeById) {
+                              if (isUserAlreadyLike) {
+                                const userlikeId = allRelatedPosts?.filter(
+                                  (likes) => {
+                                    return (
+                                      likes.User?._id ===
+                                      `${data?.PostLikes?.User?._id}`
+                                    );
+                                  }
+                                )[0];
                                 // if post is already liked by the user
                                 // remove the user
                                 cache.writeQuery({
@@ -626,10 +621,7 @@ export default function CardPost({ width }: ICard) {
                                   data: {
                                     PostLikes: cacheData?.PostLikes.filter(
                                       (likes) => {
-                                        return (
-                                          likes.User?._id !==
-                                          `${AuthInfo.Data?._id}`
-                                        );
+                                        return likes._id !== userlikeId?._id;
                                       }
                                     ),
                                   },
@@ -760,7 +752,7 @@ export default function CardPost({ width }: ICard) {
                     >
                       <ReplyAllIcon />
                     </IconButton>
-                    <span>980</span>
+                    <span>{RetweetedRating?.length}</span>
                   </Box>
                 </CardActions>
                 <Divider />
