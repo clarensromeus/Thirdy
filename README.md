@@ -1,4 +1,4 @@
-# TechAdmin Web app
+# Techy social network application
 
 a full-stack social network web application
 with facebook-like views, features and actions
