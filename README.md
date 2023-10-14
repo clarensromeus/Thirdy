@@ -21,3 +21,7 @@
 - Redis
 - Nodemailer
 - Zod for form validation on the Server
+
+## Note
+
+Cloudinary is used for image hosting on the cloud
