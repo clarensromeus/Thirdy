@@ -1,3 +1,6 @@
+
+![Screen Shot 2023-10-14 at 7 01 48 PM](https://github.com/sbvkrishna/low-level-design/assets/108362048/af475675-be8d-46e3-b25d-70591471579f)
+
 ## 🚀 Tech Stack
 
 #### Client
