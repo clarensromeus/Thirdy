@@ -1,3 +1,9 @@
+# TechAdmin Web app
+
+a full-stack social network web application
+with facebook-like views, features and actions
+
+ ## Preview Screenshots
 
 ![Screen Shot 2023-10-14 at 7 01 48 PM](https://github.com/sbvkrishna/low-level-design/assets/108362048/af475675-be8d-46e3-b25d-70591471579f)
 
