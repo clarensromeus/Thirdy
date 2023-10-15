@@ -13,7 +13,7 @@ with facebook-like views, features and actions
 
 ![Screen Shot 2023-10-15 at 2 02 18 PM](https://github.com/sbvkrishna/low-level-design/assets/108362048/fe99eb94-4de7-441d-87ae-a14bd772e38b)
 
-![Screen Shot 2023-10-15 at 3 55 18 PM](https://github.com/SashiDo/content-moderation-application/assets/108362048/42d520bd-d1a0-4750-b260-8d3bb977e7c7)
+![Screen Shot 2023-10-15 at 5 05 16 PM](https://github.com/SashiDo/content-moderation-application/assets/108362048/58a1a543-fa9a-46ec-8add-6588eac11f34)
 
 ![Screen Shot 2023-10-14 at 7 58 19 PM](https://github.com/sbvkrishna/low-level-design/assets/108362048/0c588776-e950-47d0-b9a4-8f59d238ff3f)
 
