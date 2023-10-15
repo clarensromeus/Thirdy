@@ -3,15 +3,7 @@
 a full-stack social network web application
 with facebook-like views, features and actions
 
-<<<<<<< HEAD
-
 ## Preview Screenshots
-
-=======
-
-## Preview Screenshots
-
-> > > > > > > a561f97d9e047c77b28c3100b8e4f3f7a2394d4d
 
 ![Screen Shot 2023-10-14 at 7 01 48 PM](https://github.com/sbvkrishna/low-level-design/assets/108362048/af475675-be8d-46e3-b25d-70591471579f)
 
@@ -56,5 +48,3 @@ with facebook-like views, features and actions
 - Zod for form validation on the Server
 
 ## Note
-
-Cloudinary is used for image hosting on the cloud
