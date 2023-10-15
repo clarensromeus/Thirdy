@@ -15,6 +15,8 @@ with facebook-like views, features and actions
 
 ![Screen Shot 2023-10-14 at 8 12 55 PM](https://github.com/sbvkrishna/low-level-design/assets/108362048/f350bc9e-5ff7-4eae-977e-b57d230fcedc)
 
+![Screen Shot 2023-10-15 at 12 51 09 PM](https://github.com/sbvkrishna/low-level-design/assets/108362048/fe70c47e-3695-485a-a689-b93440bceb85)
+
 ## 🚀 Tech Stack
 
 #### Client
