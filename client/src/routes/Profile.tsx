@@ -209,6 +209,7 @@ const Profile = () => {
                 fontWeight="bold"
                 fontFamily="Roboto"
                 fontSize="1.9rem"
+                color={isEqual(mode.mode, "light") ? "" : grey[100]}
               >
                 {upperFirst(`${data?.userStatics?.UserInfo?.Firstname}`)}{" "}
                 {data?.userStatics?.UserInfo?.Lastname}
@@ -257,7 +258,13 @@ const Profile = () => {
                 />
               </Box>
               <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-                <Typography fontWeight="560" fontSize="16px">
+                <Typography
+                  fontWeight="560"
+                  fontSize="16px"
+                  sx={{
+                    color: isEqual(mode.mode, "light") ? "black" : grey[100],
+                  }}
+                >
                   Last trending
                 </Typography>
                 <Typography color="text.secondary" fontSize="15px">

@@ -62,9 +62,8 @@ const NotiPopper = ({ openNoti, anchorElNoti }: INotiPopperProps) => {
   const isAuth = useReactiveVar(Authentication);
 
   // notification handlers
-  const { CreateNotification, PushNotification } = useNotification(
-    `${AuthInfo.Data?._id}`
-  );
+  const { CreateNotification, PushNotification, DeleteNotification } =
+    useNotification(`${AuthInfo.Data?._id}`);
 
   const Notifications = useReactiveVar(AllNotifications);
 
@@ -472,8 +471,16 @@ const NotiPopper = ({ openNoti, anchorElNoti }: INotiPopperProps) => {
                                         ALL_FRIEND_REQUESTS,
                                         GET_NOTIFICATIONS,
                                       ],
+
                                       onCompleted: async () => {
                                         try {
+                                          // delete the friend request from the list of notifications
+                                          await DeleteNotification({
+                                            notiId: notifications._id,
+                                            userId: `${AuthInfo.Data?._id}`,
+                                          });
+                                          // create new notification to alert the user whether the friend request
+                                          // accepted or rejected
                                           await CreateNotification({
                                             ReceiverId: `${notifications.SenderInfo?._id}`,
                                             SenderInfo: `${AuthInfo.Data?._id}`,
@@ -529,6 +536,13 @@ const NotiPopper = ({ openNoti, anchorElNoti }: INotiPopperProps) => {
                                         GET_NOTIFICATIONS,
                                       ],
                                       onCompleted: async () => {
+                                        // delete the friend request from the list of notifications
+                                        await DeleteNotification({
+                                          notiId: notifications._id,
+                                          userId: `${AuthInfo.Data?._id}`,
+                                        });
+                                        // create new notification to alert the user whether the friend request
+                                        // accepted or rejected
                                         try {
                                           await CreateNotification({
                                             ReceiverId: `${notifications.SenderInfo?._id}`,

@@ -13,7 +13,11 @@ import { IAuthState } from "../typings/GlobalState";
 import { ALL_USERS } from "../graphql/User.graphql";
 import { IpopOver } from "../typings/Home";
 
-const PopOverSearch = ({ anchorElSearch, setAnchorElSearch }: IpopOver) => {
+const PopOverSearch = ({
+  anchorElSearch,
+  setAnchorElSearch,
+  search,
+}: IpopOver) => {
   const contextData = React.useContext(Context);
   const AuthInfo = useRecoilValue<Partial<IAuthState>>(contextData.GetAuthInfo);
 
@@ -71,13 +75,13 @@ const PopOverSearch = ({ anchorElSearch, setAnchorElSearch }: IpopOver) => {
             <Box pb={2}>
               <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
                 {data?.allUsers
-                  /*  ?.filter((user) =>
-                    search.toLowerCase() === ""
+                  ?.filter((user) =>
+                    search?.toLowerCase() === ""
                       ? user
                       : user?.Firstname.toLowerCase().includes(
-                          `${search.toLowerCase()}`
+                          `${search?.toLowerCase()}`
                         )
-                  ) */
+                  )
                   ?.map((user) => {
                     return (
                       <React.Fragment key={user?._id}>

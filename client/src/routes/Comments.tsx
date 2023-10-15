@@ -166,8 +166,8 @@ const Comment = ({ state, setState, PostId }: ICommentProps): JSX.Element => {
           <Box
             p={0.2}
             sx={{
-              maxHeight: 142,
-              height: 142,
+              maxHeight: 125,
+              height: 124,
               overflowY: "auto",
               position: "relative",
             }}

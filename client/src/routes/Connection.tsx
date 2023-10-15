@@ -28,7 +28,9 @@ import * as yup from "yup";
 import { useLazyQuery, ApolloError } from "@apollo/client";
 import { ClipLoader } from "react-spinners";
 import { useNavigate, NavigateFunction, Navigate } from "react-router-dom";
+import { useRecoilValue } from "recoil";
 import uniqueId from "lodash/uniqueId";
+import isEqual from "lodash/isEqual";
 // externally crafted imports of resources
 import validateConnection from "../validators/Connection";
 import { USER_CONNECTION } from "../graphql/User.graphql";
@@ -39,12 +41,18 @@ import {
 } from "../__generated__/graphql";
 import Alert from "../components/Alert";
 import isAuthenticated from "../components/isAuthenticated";
+import modeContext from "../store/ModeContext";
+import { IMode } from "../typings/GlobalState";
 
 const Connection = (): JSX.Element => {
   const [showPassword, setShowPassword] = React.useState<boolean>(false);
 
+  const modeContextData = React.useContext(modeContext);
+
   const [open, setOpen] = React.useState<boolean>(false);
   const isAuth: boolean = isAuthenticated();
+
+  const mode = useRecoilValue(modeContextData.GetMode);
 
   const [info, setInfo] = React.useState<Omit<response, "token">>({
     message: "",
@@ -283,7 +291,13 @@ const Connection = (): JSX.Element => {
                           type="submit"
                           fullWidth
                           variant="contained"
-                          sx={{ fontWeight: "bold", boxShadow: "none" }}
+                          sx={{
+                            fontWeight: "bold",
+                            boxShadow: "none",
+                            bgcolor: isEqual(mode.mode, "light")
+                              ? ""
+                              : "#0866ff",
+                          }}
                         >
                           {loading ? (
                             <ClipLoader
@@ -327,13 +341,31 @@ const Connection = (): JSX.Element => {
                 mb={3}
                 sx={{ display: "flex", justifyContent: "center", gap: 1 }}
               >
-                <IconButton sx={{ bgcolor: grey[100] }}>
+                <IconButton
+                  sx={{
+                    bgcolor: isEqual(mode.mode, "light")
+                      ? grey[100]
+                      : "rgba(255, 255, 255, 0.1)",
+                  }}
+                >
                   <FacebookIcon sx={{ color: "blue" }} />
                 </IconButton>
-                <IconButton sx={{ bgcolor: grey[100] }}>
+                <IconButton
+                  sx={{
+                    bgcolor: isEqual(mode.mode, "light")
+                      ? grey[100]
+                      : "rgba(255, 255, 255, 0.1)",
+                  }}
+                >
                   <GoogleIcon sx={{ color: "red" }} />
                 </IconButton>
-                <IconButton sx={{ bgcolor: grey[100] }}>
+                <IconButton
+                  sx={{
+                    bgcolor: isEqual(mode.mode, "light")
+                      ? grey[100]
+                      : "rgba(255, 255, 255, 0.1)",
+                  }}
+                >
                   <GitHubIcon />
                 </IconButton>
               </Box>

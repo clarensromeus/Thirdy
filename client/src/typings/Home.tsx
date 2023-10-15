@@ -25,6 +25,7 @@ interface ICommentProps {
 interface IpopOver {
   anchorElSearch: any | null;
   setAnchorElSearch: React.Dispatch<React.SetStateAction<any | null>>;
+  search?: string;
 }
 
 export type { IDrawer, IContact, IMenuProfile, ICommentProps, IpopOver };

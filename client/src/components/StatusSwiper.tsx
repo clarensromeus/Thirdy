@@ -39,24 +39,24 @@ export default function StatusSwiper() {
 
   const [open, setOpen] = React.useState(false);
 
-  const { data, loading } = useQuery<
+  /*  const { data, loading } = useQuery<
     GetUserStatusQuery,
     GetUserStatusQueryVariables
   >(GET_USER_STATUS, {
     variables: { getUserStatusUserId: `${AuthInfo.Data?._id}` },
-  });
+  }); */
 
   const { data: userFriends } = useQuery<
     AllFriendsQuery,
     AllFriendsQueryVariables
   >(ALL_FRIENDS, { variables: { FriendId: `${AuthInfo.Data?._id}` } });
 
-  // get friends info in case the active user sent the friend request
+  // get friends info whether the active user sent the friend request
   const sentFriends = filter(userFriends?.AllFriends, function (friends) {
     return friends.RequestId === `${AuthInfo.Data?._id}`;
   });
 
-  // get user info in case the active acceptedId the friend request
+  // get user info whether the active acceptedId is the friend request
   const receivedFriends = filter(userFriends?.AllFriends, function (friends) {
     return friends.AcceptedId === `${AuthInfo.Data?._id}`;
   });

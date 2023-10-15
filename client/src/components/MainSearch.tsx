@@ -3,7 +3,6 @@ import { isEqual } from "lodash";
 import grey from "@mui/material/colors/grey";
 import { useRecoilValue } from "recoil";
 import SearchIcon from "@mui/icons-material/Search";
-import { useNavigate, NavigateFunction } from "react-router-dom";
 import __ from "lodash";
 // internally crafted imports of resources
 import modeContext from "../store/ModeContext";
@@ -43,6 +42,7 @@ const SearchBar = (): JSX.Element => {
   const popoverProps: IpopOver = {
     anchorElSearch,
     setAnchorElSearch,
+    search,
   };
 
   React.useEffect(() => {

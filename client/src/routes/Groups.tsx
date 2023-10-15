@@ -61,7 +61,6 @@ import validateGroupCreation from "../validators/GroupCreation";
 import { getStyles } from "../components/Friends/Invitation";
 import modeContext from "../store/ModeContext";
 import { IMode } from "../typings/GlobalState";
-import useNotification from "../hooks/useNotifications";
 import useWindowSize from "../hooks/useWindowSize";
 
 // it allows to have access to local related time
@@ -90,8 +89,6 @@ const Groups = () => {
 
   const AuthInfo = useRecoilValue<Partial<IAuthState>>(contextData.GetAuthInfo);
   const mode = useRecoilValue<IMode>(modeContextData.GetMode);
-
-  const { CreateNotification, PushNotification } = useNotification();
 
   const [JoinGroup] = useMutation<
     JoinGroupMutation,

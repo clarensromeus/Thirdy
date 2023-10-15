@@ -22,12 +22,14 @@ import FormLabel from "@mui/material/FormLabel";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import grey from "@mui/material/colors/grey";
 import IconButton from "@mui/material/IconButton";
+import { useRecoilValue } from "recoil";
 import InputAdornment from "@mui/material/InputAdornment";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { Link } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
+import isEqual from "lodash/isEqual";
 import uniqueId from "lodash/uniqueId";
 import { useMutation, ApolloError } from "@apollo/client";
 import { useNavigate, NavigateFunction, Navigate } from "react-router-dom";
@@ -39,8 +41,13 @@ import { USER_REGISTERATION } from "../graphql/User.graphql";
 import { ISignUp, response } from "../typings/Authentication";
 import Alert from "../components/Alert";
 import isAuthenticated from "../components/isAuthenticated";
+import { IMode } from "../typings/GlobalState";
+import modeContext from "../store/ModeContext";
 
 const Register = () => {
+  const modeContextData = React.useContext(modeContext);
+  const mode = useRecoilValue<IMode>(modeContextData.GetMode);
+
   const [showPassword, setShowPassword] = React.useState<boolean>(false);
 
   const [open, setOpen] = React.useState<boolean>(false);
@@ -525,7 +532,13 @@ const Register = () => {
                           fullWidth
                           type="submit"
                           variant="contained"
-                          sx={{ fontWeight: "bold", boxShadow: "none" }}
+                          sx={{
+                            fontWeight: "bold",
+                            boxShadow: "none",
+                            bgcolor: isEqual(mode.mode, "light")
+                              ? ""
+                              : "#0866ff",
+                          }}
                         >
                           {loading ? (
                             <ClipLoader

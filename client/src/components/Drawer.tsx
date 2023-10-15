@@ -150,14 +150,14 @@ const AppDrawer = () => {
         </Box>
         <Box sx={{ overflow: "auto" }}>
           <List>
-            {DrawerInfo.map((info) => {
+            {DrawerInfo.map((info, index) => {
               const [__, second, third]: string[] =
                 location.pathname.split("/");
 
               const { Path, DrawerIcon } = info;
 
               const isMatch: boolean = !isNil(third) && third === Path;
-            
+
               return (
                 <ListItem
                   key={info.Text}
@@ -180,7 +180,11 @@ const AppDrawer = () => {
                 >
                   <ListItemButton
                     onClick={() => {
-                      navigate(`${Path}`);
+                      if (index === 0) {
+                        navigate("/thirdy");
+                      } else {
+                        navigate(`${Path}`);
+                      }
                     }}
                   >
                     <ListItemIcon>

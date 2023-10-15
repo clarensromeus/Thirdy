@@ -20,6 +20,7 @@ import ListItemText from "@mui/material/ListItemText";
 import { slice, isEqual, isNil } from "lodash";
 import ListItemAvatar from "@mui/material/ListItemAvatar";
 import { ClipLoader } from "react-spinners";
+import { useNavigate, NavigateFunction } from "react-router-dom";
 import { useReactiveVar } from "@apollo/client";
 import ListItemButton from "@mui/material/ListItemButton";
 // internally crafted imports of resources
@@ -65,6 +66,8 @@ const Thirdy = (): JSX.Element => {
 
   const mode = useRecoilValue<IMode>(modeContextData.GetMode);
   const { width, height } = useWindowSize();
+
+  const navigate: NavigateFunction = useNavigate();
 
   const isAuth = useReactiveVar(Authentication);
   const { CreateNotification, PushNotification } = useNotification();
@@ -475,6 +478,7 @@ const Thirdy = (): JSX.Element => {
                       ? "#E8F0FE"
                       : "rgba(255, 255, 255, 0.2)",
                   }}
+                  onClick={() => navigate("groups")}
                 >
                   <AddIcon
                     sx={{

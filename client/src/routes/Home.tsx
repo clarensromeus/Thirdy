@@ -76,8 +76,6 @@ const Home = (): JSX.Element => {
 
   const { width, height } = useWindowSize();
 
-  const navigate: NavigateFunction = useNavigate();
-
   // event handler notifications popper
   const handleClickNoti = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElNoti(event.currentTarget);
@@ -201,7 +199,7 @@ const Home = (): JSX.Element => {
               >
                 thirdy
               </Typography>
-              {width && width < 720 ? (
+              {/*  {width && width < 720 ? (
                 <Box sx={{ pl: 1 }}>
                   <IconButton
                     sx={{
@@ -220,9 +218,9 @@ const Home = (): JSX.Element => {
                     />
                   </IconButton>
                 </Box>
-              ) : (
-                <SearchBar />
-              )}
+              ) : ( */}
+              <SearchBar />
+              {/*  )} */}
               <Box sx={{ flexGrow: 1 }} />
               <Box sx={{ display: "flex", alignItems: "center", gap: 1.2 }}>
                 {width && width > 720 && (

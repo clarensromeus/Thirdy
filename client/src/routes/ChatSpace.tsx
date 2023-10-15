@@ -451,7 +451,7 @@ const ChatSpace = () => {
             position: "fixed",
             bottom: 0,
             borderTop: isEqual(mode.mode, "light")
-              ? `1px solid ${grey[400]}`
+              ? `1px solid ${grey[300]}`
               : `1px solid ${grey[800]}`,
             width: "100%",
             display: "flex",
