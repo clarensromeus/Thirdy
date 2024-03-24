@@ -23,6 +23,8 @@ with facebook-like views, features and actions
 
 ![Screen Shot 2023-10-15 at 12 51 09 PM](https://github.com/sbvkrishna/low-level-design/assets/108362048/fe70c47e-3695-485a-a689-b93440bceb85)
 
+![Screen Shot 2024-03-24 at 6 16 59 PM](https://github.com/iamshiv007/NextJS-Portfolio/assets/108362048/ac1931af-11e4-48bb-830d-b5a3e2806791)
+
 ![Screen Shot 2023-10-15 at 2 23 04 PM](https://github.com/sbvkrishna/low-level-design/assets/108362048/16b67404-d789-41db-a4c7-fa63124927d2)
 
 ## 🚀 Tech Stack
