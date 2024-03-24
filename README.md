@@ -15,7 +15,7 @@ with facebook-like views, features and actions
 
 ![Screen Shot 2023-10-15 at 5 12 53 PM](https://github.com/SashiDo/content-moderation-application/assets/108362048/2f773d46-570d-4fc6-815d-f68cef356ba7)
 
-![Screen Shot 2024-03-24 at 5 38 28 PM](https://github.com/iamshiv007/NextJS-Portfolio/assets/108362048/bed926a4-efee-464a-b80e-cb17b7f66538)
+![Screen Shot 2024-03-24 at 6 12 31 PM](https://github.com/iamshiv007/NextJS-Portfolio/assets/108362048/07dcfcbe-ddcf-4446-b39e-240fe0a6ab4e)
 
 ![Screen Shot 2023-10-14 at 7 58 19 PM](https://github.com/sbvkrishna/low-level-design/assets/108362048/0c588776-e950-47d0-b9a4-8f59d238ff3f)
 
